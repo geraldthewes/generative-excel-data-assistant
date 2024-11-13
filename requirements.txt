@@ -1,0 +1,11 @@
+# python 3.11
+# don't forget to set .env variables
+streamlit
+openai
+openpyxl
+pandas
+matplotlib
+openai
+gradio
+transformers>=4.46.1
+git+https://gitlab.ost.ch/generative-ai/student-space/llmhub-client.git
