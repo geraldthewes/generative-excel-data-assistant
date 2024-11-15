@@ -1,27 +1,82 @@
 import json
 from llm_factory import llm_factory
 from functions import (
-    get_suppliers_by_material,
+    add_todo_item,
+    get_next_departure_time,
+    list_todo_items,
+    caesar_cipher,
 )
 
 tool_descriptions = [
     {
         "function": {
-            "name": "get_suppliers_by_material",
-            "description": "Get suppliers that deliver a material.",
+            "name": "get_next_departure_time",
+            "description": "Get the next departure time for a train connection",
             "parameters": [
                 {
-                    "name": "material",
+                    "name": "from_station",
                     "type": "string",
-                    "description": "The material to search for.",
+                    "description": "The station or city where the train journey starts.",
+                },
+                {
+                    "name": "to_station",
+                    "type": "string",
+                    "description": "The station or city where the train journey ends.",
                 },
             ],
         },
-    }
+    },
+    {
+        "function": {
+            "name": "add_todo_item",
+            "description": "Add a to-do item to the list",
+            "parameters": [
+                {
+                    "name": "item",
+                    "type": "string",
+                    "description": "The to-do item to add to the list.",
+                },
+            ],
+        },
+    },
+    {
+        "function": {
+            "name": "list_todo_items",
+            "description": "List all to-do items",
+        },
+    },
+    {
+        "function": {
+            "name": "llm",
+            "description": "Generate text using a language model. Use this function if no other function is suitable.",
+            # no parameters as the conversation is stored in the messages variable
+        },
+    },
+    {
+        "function": {
+            "name": "caesar_cipher",
+            "description": "Encrypt and decrypt a text using Caesar Cipher which shifts letters by a given number of positions.",
+            "parameters": [
+                {
+                    "name": "text",
+                    "type": "string",
+                    "description": "The text to be encrypted or decrypted using Caesar Cipher.",
+                },
+                {
+                    "name": "shift",
+                    "type": "string",
+                    "description": "The positive (forward, encryption) or negative (backward, decryption) shift in position in the alphabet of each character in the text (default is 3).",
+                },
+            ],
+        },
+    },
 ]
 
 tools_map = {
-    "get_suppliers_by_material": get_suppliers_by_material,
+    "get_next_departure_time": get_next_departure_time,
+    "add_todo_item": add_todo_item,
+    "list_todo_items": list_todo_items,
+    "caesar_cipher": caesar_cipher,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
@@ -69,6 +124,7 @@ class FunctionAgent:
                 answer += x
             start_json = 0
             end_json = answer[::-1].find("}")
+            print(f'answer from llm: {answer}')
             braces_stack = []
             for i, c in enumerate(answer):
                 if c == "{":
