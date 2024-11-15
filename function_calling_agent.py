@@ -1,14 +1,14 @@
 import json
 from llm_factory import llm_factory
 from functions import (
-    get_supplier_by_material,
+    get_suppliers_by_material,
 )
 
 tool_descriptions = [
     {
         "function": {
-            "name": "get_supplier_by_material",
-            "description": "Get a specific supplier by material.",
+            "name": "get_suppliers_by_material",
+            "description": "Get suppliers that deliver a material.",
             "parameters": [
                 {
                     "name": "material",
@@ -21,7 +21,7 @@ tool_descriptions = [
 ]
 
 tools_map = {
-    "get_supplier_by_material": get_supplier_by_material,
+    "get_suppliers_by_material": get_suppliers_by_material,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.

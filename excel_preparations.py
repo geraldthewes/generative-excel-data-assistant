@@ -3,16 +3,17 @@ from typing import List, Optional
 import os
 
 class ExcelPreparations:
-    def __init__(self):
-        self.data = {}
-
-
     def read_excel(self, files):
+        data = {}
         for file in files:
             file_path = os.path.join(os.getcwd(), 'tmp', file)
-            header_index = self.detect_header_index(file_path)
-            self.data[file] = {"header_index": header_index, "df": pd.read_excel(file_path)}
-        return self.data
+            [header_row, header_col] = self.detect_header_index(file_path)
+            df = pd.read_excel(file_path, header=header_row + 1)
+            df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
+            if header_col > 0:
+                df = df.drop(df.columns[:header_col], axis=1)
+            data[file] = df
+        return data
 
     def detect_header_index(self, file) -> Optional[List[int]]: # returns [header_row, header_col] with df index
         df = pd.read_excel(file)
