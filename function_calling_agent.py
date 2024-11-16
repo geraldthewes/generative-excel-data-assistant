@@ -2,6 +2,7 @@ import json
 from llm_factory import llm_factory
 from functions import (
     get_suppliers_by_material,
+    compare_price_per_unit_by_quarters,
 )
 
 tool_descriptions = [
@@ -17,11 +18,45 @@ tool_descriptions = [
                 },
             ],
         },
+    },
+    {
+        "function": {
+            "name": "compare_price_per_unit_by_quarters",
+            "description": "Compare price per unit for two sales quarters. Takes in two sales quarters along with years and returns the average price per unit for the two quarters.",
+            "parameters": [
+                {
+                    "name": "unit_type",
+                    "type": "string",
+                    "description": "The type of unit to compare.",
+                },
+                {
+                    "name": "quarter1",
+                    "type": "string",
+                    "description": "The first quarter to compare. Possible values: Q1, Q2, Q3, Q4.",
+                },
+                {
+                    "name": "year1",
+                    "type": "int",
+                    "description": "The year of the first quarter.",
+                },
+                {
+                    "name": "quarter2",
+                    "type": "string",
+                    "description": "The second quarter to compare. Possible values: Q1, Q2, Q3, Q4.",
+                },
+                {
+                    "name": "year2",
+                    "type": "int",
+                    "description": "The year of the second quarter.",
+                },
+            ],
+        },
     }
 ]
 
 tools_map = {
     "get_suppliers_by_material": get_suppliers_by_material,
+    "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.

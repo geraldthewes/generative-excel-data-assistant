@@ -4,7 +4,7 @@ import os
 
 class ExcelPreparations:
     def read_excel(self, files):
-        data = {}
+        data_frames = {}
         for file in files:
             file_path = os.path.join(os.getcwd(), 'tmp', file)
             [header_row, header_col] = self.detect_header_index(file_path)
@@ -12,8 +12,8 @@ class ExcelPreparations:
             df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
             if header_col > 0:
                 df = df.drop(df.columns[:header_col], axis=1)
-            data[file] = df
-        return data
+            data_frames[file] = df
+        return data_frames
 
     def detect_header_index(self, file) -> Optional[List[int]]: # returns [header_row, header_col] with df index
         df = pd.read_excel(file)
