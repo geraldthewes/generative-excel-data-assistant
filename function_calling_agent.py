@@ -1,11 +1,20 @@
-import json
 from llm_factory import llm_factory
 from functions import (
     get_suppliers_by_material,
     compare_price_per_unit_by_quarters,
+    excel_test,
+    get_material_sales,
 )
+from utils import answer_to_json
 
 tool_descriptions = [
+    {
+        "function": {
+            "name": "llm",
+            "description": "Generate text using a language model. Use this function if no other function is suitable.",
+            # no parameters as the conversation is stored in the messages variable
+        },
+    },
     {
         "function": {
             "name": "get_suppliers_by_material",
@@ -51,12 +60,44 @@ tool_descriptions = [
                 },
             ],
         },
-    }
+    },
+    {
+        "function": {
+            "name": "excel_test",
+            "description": "Create a test excel file.",
+            "parameters": [],
+        },
+    },
+    {
+        "function": {
+            "name": "get_material_sales",
+            "description": "Get the sales of a material of all countries.",
+            "parameters": [
+                {
+                    "name": "material",
+                    "type": "string",
+                    "description": "The material to search for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year of sales.",
+                },
+                {
+                    "name": "month",
+                    "type": "string",
+                    "description": "The month of sales. Available values: January, February, March, April, May, June, July, August, September, October, November, December.",
+                },
+            ],
+        },
+    },
 ]
 
 tools_map = {
     "get_suppliers_by_material": get_suppliers_by_material,
     "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
+    "excel_test": excel_test,
+    "get_material_sales": get_material_sales
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
@@ -102,27 +143,14 @@ class FunctionAgent:
             answer = ""
             for x in self.model([{"role": "user", "content": prompt}]):
                 answer += x
-            start_json = 0
-            end_json = answer[::-1].find("}")
-            braces_stack = []
-            for i, c in enumerate(answer):
-                if c == "{":
-                    braces_stack.append(i)
-                elif c == "}":
-                    start_json = braces_stack.pop()
-                    if not braces_stack:
-                        end_json = i
-                        break
-            json_string = answer[start_json:end_json + 1]
-            print(f'extracted json_string from llm answer: {json_string}')
-            answer_json = json.loads(json_string)
+            answer_json = answer_to_json(answer)
             function_name = answer_json["function"]
             if function_name == "llm":
                 for x in self.model(messages):
                     yield x
             else:
                 parameters = answer_json["parameters"]
-                yield tools_map[function_name](**parameters)
+                yield tools_map[function_name](self.model, **parameters)
         except Exception as e:
             yield str(e) + str(answer)
 

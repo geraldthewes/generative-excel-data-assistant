@@ -8,7 +8,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 llm = llm_factory("llmhub")
-llm = FunctionAgent(llm)
+calling_agent = FunctionAgent(llm)
 
 # Define the tmp folder
 tmp_folder = os.path.join(os.getcwd(), "tmp")
@@ -33,7 +33,7 @@ with gr.Blocks() as demo:
 
     def bot(history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         history.append({"role": "assistant", "content": ""})
-        for x in llm(history[:-1]):
+        for x in calling_agent(history[:-1]):
             history[-1]["content"] += x
             yield history
 
