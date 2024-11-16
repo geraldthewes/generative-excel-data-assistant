@@ -4,16 +4,30 @@ import os
 
 class ExcelPreparations:
     def read_excel(self, files):
-        data = {}
+        data_frames = {}
+        info_texts = {}
         for file in files:
             file_path = os.path.join(os.getcwd(), 'tmp', file)
             [header_row, header_col] = self.detect_header_index(file_path)
-            df = pd.read_excel(file_path, header=header_row + 1)
+
+            # Extract header texts
+            if header_row > 0:
+                full_df = pd.read_excel(file_path)
+                info_texts[file] = ", ".join(filter(lambda x: "Unnamed" not in x, full_df.columns))
+                if header_row > 1:
+                    for i in range(0, header_row - 1):
+                        row = full_df.iloc[i, :]
+                        info_texts[file] += ". " + ", ".join(row[row.notna()].tolist())
+            else:
+                info_texts[file] = "No information"
+
+            
+            df = pd.read_excel(file_path, header=header_row)
             df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
             if header_col > 0:
                 df = df.drop(df.columns[:header_col], axis=1)
-            data[file] = df
-        return data
+            data_frames[file] = df
+        return data_frames, info_texts
 
     def detect_header_index(self, file) -> Optional[List[int]]: # returns [header_row, header_col] with df index
         df = pd.read_excel(file)
@@ -34,7 +48,7 @@ class ExcelPreparations:
                 if i + 1 < len(df) and df.iloc[i + 1].notna().sum() == filled_cells:
                     # Optionally, check if values are mostly strings, indicating headers
                     if row.apply(lambda x: isinstance(x, str)).sum() > (0.5 * filled_cells):
-                        header_row = i
+                        header_row = i + 1
                         break
 
         # Detect the header column if header_row is found

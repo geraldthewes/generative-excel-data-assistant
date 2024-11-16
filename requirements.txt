@@ -3,6 +3,7 @@
 streamlit
 openai
 openpyxl
+XlsxWriter
 pandas
 matplotlib
 openai
