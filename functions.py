@@ -45,7 +45,7 @@ def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts:
             "country_code":  "country code. Available options are: CH, DE, FR, US, ES, gloabl.",
             "year_from": "year_from",
             "year_to": "year_to",
-            "columns": "Map columns to avialbe options. Example: {'Cost per Unit ($)': 'cost_per_unit_dollar', 'Lead Time (Days)': 'lead_time_days', ...}"
+            "columns": "Map columns to available options. Example: {'Cost per Unit ($)': 'cost_per_unit_dollar', 'Lead Time (Days)': 'lead_time_days', ...}"
         }
 
         Remember to only give the json object as output, without any additional text. Strictly avoid anything else than JSON output also exaplanations and other text."""
@@ -106,7 +106,9 @@ def get_suppliers_by_material(model, material: str) -> str:
         
             if result.shape[0] > 0:
                 suppliers += ", ".join(result["Supplier"].to_list())
-        
+
+        if not suppliers:
+            return f"No suppliers found. It might be that no relavant excel file was uploaded, or the material '{material}' was not found."
         return suppliers
             
         
