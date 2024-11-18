@@ -6,6 +6,7 @@ from functions import (
     get_material_sales,
 )
 from utils import answer_to_json
+import traceback
 
 tool_descriptions = [
     {
@@ -150,8 +151,10 @@ class FunctionAgent:
                     yield x
             else:
                 parameters = answer_json["parameters"]
+                print(f'Calling function {function_name} with parameters {parameters}')
                 yield tools_map[function_name](self.model, **parameters)
         except Exception as e:
+            traceback.print_exc()
             yield str(e) + str(answer)
 
 if __name__ == "__main__":
