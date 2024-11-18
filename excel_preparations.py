@@ -23,6 +23,7 @@ class ExcelPreparations:
 
             
             df = pd.read_excel(file_path, header=header_row)
+            print(f'\n\nheader row: {header_row} for dataframe {file}:\n{df}')
             df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
             if header_col > 0:
                 df = df.drop(df.columns[:header_col], axis=1)
@@ -30,7 +31,7 @@ class ExcelPreparations:
         return data_frames, info_texts
 
     def detect_header_index(self, file) -> Optional[List[int]]: # returns [header_row, header_col] with df index
-        df = pd.read_excel(file)
+        df = pd.read_excel(file, header=None)
         if df is None:
             raise ValueError("File not loaded. Please load the file first using read_excel.")
         
@@ -48,7 +49,7 @@ class ExcelPreparations:
                 if i + 1 < len(df) and df.iloc[i + 1].notna().sum() == filled_cells:
                     # Optionally, check if values are mostly strings, indicating headers
                     if row.apply(lambda x: isinstance(x, str)).sum() > (0.5 * filled_cells):
-                        header_row = i + 1
+                        header_row = i
                         break
 
         # Detect the header column if header_row is found
