@@ -42,7 +42,7 @@ tool_descriptions = [
                 {
                     "name": "quarter1",
                     "type": "string",
-                    "description": "The first quarter to compare. Possible values: Q1, Q2, Q3, Q4.",
+                    "description": "The first quarter to compare. Possible values: Q1, Q2, Q3, Q4. No year.",
                 },
                 {
                     "name": "year1",
@@ -52,7 +52,7 @@ tool_descriptions = [
                 {
                     "name": "quarter2",
                     "type": "string",
-                    "description": "The second quarter to compare. Possible values: Q1, Q2, Q3, Q4.",
+                    "description": "The second quarter to compare. Possible values: Q1, Q2, Q3, Q4. No year.",
                 },
                 {
                     "name": "year2",
@@ -87,7 +87,7 @@ tool_descriptions = [
                 {
                     "name": "month",
                     "type": "string",
-                    "description": "The month of sales. Available values: January, February, March, April, May, June, July, August, September, October, November, December.",
+                    "description": "The month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
                 },
             ],
         },
