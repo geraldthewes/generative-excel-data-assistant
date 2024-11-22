@@ -17,6 +17,7 @@ tmp_folder = os.path.join(os.getcwd(), "tmp")
 def cleanup():
     if os.path.exists(tmp_folder):
         shutil.rmtree(tmp_folder)
+    os.mkdir(tmp_folder)
 
 # Ensure tmp folder exists
 if not os.path.exists(tmp_folder):
@@ -52,7 +53,5 @@ def main_gui() -> None:
     demo.launch()
 
 if __name__ == "__main__":
-    try:
-        main_gui()
-    finally:
-        cleanup()  # Delete the tmp folder after the function is killed
+    cleanup()  # Delete the tmp folder after the function is killed
+    main_gui()

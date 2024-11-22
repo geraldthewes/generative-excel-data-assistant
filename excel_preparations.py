@@ -8,6 +8,8 @@ class ExcelPreparations:
         info_texts = {}
         for file in files:
             file_path = os.path.join(os.getcwd(), 'tmp', file)
+            if not os.path.exists(file_path) or not file_path.endswith(".xlsx"):
+                continue
             [header_row, header_col] = self.detect_header_index(file_path)
 
             # Extract header texts
@@ -23,7 +25,6 @@ class ExcelPreparations:
 
             
             df = pd.read_excel(file_path, header=header_row)
-            print(f'\n\nheader row: {header_row} for dataframe {file}:\n{df}')
             df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
             if header_col > 0:
                 df = df.drop(df.columns[:header_col], axis=1)
