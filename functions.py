@@ -2,6 +2,10 @@ import os
 from excel_preparations import ExcelPreparations
 import xlsxwriter
 from utils import answer_to_json
+import json
+from datetime import datetime
+import re
+import hashlib
 
 def country_code_to_name(code: str) -> str:
     if code == "CH":
@@ -25,7 +29,26 @@ def list_files_in_tmp():
         return []
 
     files = os.listdir(tmp_dir)
+    files = list(filter(lambda x: x.endswith('.xlsx'), files))
     return files
+
+def load_metadata_cache():
+    metadata = {}
+    cache_files = os.listdir('tmp')
+    for filename in cache_files:
+        if filename.endswith('.json'):
+            parts = filename.split('_', 1)
+            if len(parts) != 2 or not re.match('^\d{4}-\d{2}-\d{2}$', parts[0]):
+                print(f"Invalid cache file: {filename}")
+                continue
+            date = parts[0]
+            filename = parts[1]
+            if date != datetime.now().strftime("%Y-%m-%d"):
+                os.remove(f'tmp/{filename}')
+                continue
+            with open(f'tmp/{date}_{filename}', 'r') as f:
+                metadata[filename.split(".json")[0]] = json.load(f)
+    return metadata
 
 def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts: dict) -> dict:
     metadata_prompt = """As an AI assistant, please extract the metadata from this filename: '{filename}' and this information: '{info_text}'. Also map the columns to a list of available options.
@@ -50,10 +73,21 @@ def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts:
 
         Remember to only give the json object as output, without any additional text. Strictly avoid anything else than JSON output also exaplanations and other text."""
 
+    curr_date = datetime.now().strftime("%Y-%m-%d")
+    cached_metadata = load_metadata_cache()
     metadata = {}
     for filename in filenames:
+        if not filename.endswith('.xlsx'):
+            continue
         columns = data_frames[filename].columns.to_list()
         info_text = info_texts[filename]
+
+        if filename in cached_metadata:
+            if cached_metadata[filename]["cachesum"] == hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest():
+                metadata[filename] = cached_metadata[filename]
+                continue
+            else:
+                print(f"Provided file {filename} is different than cached one.")
 
         prompt = (
             metadata_prompt.format(
@@ -66,9 +100,14 @@ def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts:
         for x in model([{"role": "user", "content": prompt}]):
             answer += x
 
-        answer_json = answer_to_json(answer)
-        answer_json["columns"] = {v: k for k, v in answer_json["columns"].items()}
-        metadata[filename] = answer_json
+        answer_dict = answer_to_json(answer)
+        answer_dict["columns"] = {v: k for k, v in answer_dict["columns"].items()} # reverse the mapping
+        metadata[filename] = answer_dict
+
+        answer_dict["cachesum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()
+        with open(f"tmp/{curr_date}_{filename}.json", "w") as f:
+            json.dump(answer_dict, f)
+
     return metadata
 
 
@@ -182,6 +221,9 @@ Example prompt: How many units of wood have been sold in January 2023?
 '''
 def get_material_sales(model, material, year, month):
     files, metadata, data_frames = get_data(model)
+
+    if not year or not month:
+        return "Please provide a year and a month."
     
     if not data_frames:
         return "No data available"
@@ -215,6 +257,10 @@ def get_material_sales(model, material, year, month):
                 country = country_code_to_name(mt["country_code"])
                 number_of_sold_units_txt += f"{country}: {result[column].sum()}\n"
         
+        if not number_of_sold_units_txt:
+            return f"No sales found for {material} in {month} {year}."
+
+        number_of_sold_units_txt = f"Number of units sold for {material} in {month} {year}:\n" + number_of_sold_units_txt
         return number_of_sold_units_txt
     
 
