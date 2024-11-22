@@ -28,7 +28,7 @@ def list_files_in_tmp():
     return files
 
 def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts: dict) -> dict:
-    metadata_prompt = """As an AI assistant, please extract the metadata from this filename: '{filename}' and this information: '{info_text}'. Also map columns the columns to a list of available options.
+    metadata_prompt = """As an AI assistant, please extract the metadata from this filename: '{filename}' and this information: '{info_text}'. Also map the columns to a list of available options.
      
         ----------------------------------------
         The columns are:
@@ -42,10 +42,10 @@ def filenames_to_metadata(model, filenames: list, data_frames: dict, info_texts:
     prompt_end = """
         {
             "type": "type of the data. Available options are: sales, inventory, costs_per_unit.",
-            "country_code":  "country code. Available options are: CH, DE, FR, US, ES, gloabl.",
+            "country_code":  "country code. Available options are: CH, DE, FR, US, ES, global.",
             "year_from": "year_from",
             "year_to": "year_to",
-            "columns": "Map columns to avialbe options. Example: {'Cost per Unit ($)': 'cost_per_unit_dollar', 'Lead Time (Days)': 'lead_time_days', ...}"
+            "columns": "Map columns to available options. Example: {'Cost per Unit ($)': 'cost_per_unit_dollar', 'Lead Time (Days)': 'lead_time_days', ...}"
         }
 
         Remember to only give the json object as output, without any additional text. Strictly avoid anything else than JSON output also exaplanations and other text."""
@@ -106,7 +106,9 @@ def get_suppliers_by_material(model, material: str) -> str:
         
             if result.shape[0] > 0:
                 suppliers += ", ".join(result["Supplier"].to_list())
-        
+
+        if not suppliers:
+            return f"No suppliers found. It might be that no relavant excel file was uploaded, or the material '{material}' was not found."
         return suppliers
             
         
