@@ -7,6 +7,29 @@ import re
 import hashlib
 
 
+class ColumnType():
+    SUPPLIER = "supplier"
+    MATERIAL = "material"
+    COST_PER_UNIT_DOLLAR = "cost_per_unit_dollar"
+    LEAD_TIME_DAYS = "lead_time_days"
+    PRICE_DOLLAR = "price_dollar"
+    UNITS_IN_STORAGE = "units_in_storage"
+    YEAR = "year"
+    MONTH = "month"
+    UNITS_SOLD = "units_sold"
+    TOTAL_SALES_DOLLAR = "total_sales_dollar"
+    TOTAL_SALES_EURO = "total_sales_euro"
+
+class MetadataType():
+    TYPE = "type"
+    COUNTRY_CODE = "country_code"
+    YEAR_FROM = "year_from"
+    YEAR_TO = "year_to"
+    COLUMNS = "columns"
+
+all_columns = [attr for attr in dir(ColumnType) if not callable(getattr(ColumnType, attr)) and not attr.startswith("__")]
+
+
 def list_files_in_tmp():
     tmp_dir = os.path.join(os.getcwd(), 'tmp')
     if not os.path.exists(tmp_dir):
@@ -40,7 +63,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
         ----------------------------------------
         The columns are:
         {columns}.
-        Available options are: supplier, material, cost_per_unit_dollar, lead_time_days, price_dollar, units_in_storage, year, month, units_sold, total_sales_dollar, total_sales_euro.
+        Available options are: {all_columns}.
         ----------------------------------------
         
         The output should be in the following format:
@@ -63,7 +86,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
     for filename in filenames:
         if not filename.endswith('.xlsx'):
             continue
-        columns = data_frames[filename].columns.to_list()
+        df_columns = data_frames[filename].columns.to_list()
         info_text = info_texts[filename]
 
         if filename in cached_metadata:
@@ -75,8 +98,9 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
 
         prompt = (
             metadata_prompt.format(
-                filename=filename, columns=", ".join(columns),
-                info_text=info_text
+                filename=filename, columns=", ".join(df_columns),
+                info_text=info_text,
+                all_columns=", ".join(all_columns)
             )
             + prompt_end
         )
@@ -85,7 +109,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
             answer += x
 
         answer_dict = answer_to_json(answer)
-        answer_dict["columns"] = {v: k for k, v in answer_dict["columns"].items()} # reverse the mapping
+        answer_dict["columns"] = {v.lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
         metadata[filename] = answer_dict
 
         answer_dict["cachesum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()

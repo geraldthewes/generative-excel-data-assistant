@@ -3,7 +3,8 @@ from functions import (
     get_suppliers_by_material,
     compare_price_per_unit_by_quarters,
     excel_test,
-    get_material_sales,
+    get_material_amount_sold,
+    get_material_sales_per_country_in_currency,
 )
 from utils import answer_to_json
 import traceback
@@ -71,8 +72,8 @@ tool_descriptions = [
     },
     {
         "function": {
-            "name": "get_material_sales",
-            "description": "Get the sales of a material of all countries.",
+            "name": "get_material_amount_sold",
+            "description": "Get the amount of units sold of a material of all countries of a year.",
             "parameters": [
                 {
                     "name": "material",
@@ -85,9 +86,47 @@ tool_descriptions = [
                     "description": "The year of sales.",
                 },
                 {
-                    "name": "month",
+                    "name": "month_from",
+                    "type": "int",
+                    "description": "The start month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default: 1",
+                },
+                {
+                    "name": "month_to",
+                    "type": "int",
+                    "description": "The end month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default: 12",
+                },
+                {
+                    "name": "country",
                     "type": "string",
-                    "description": "The month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                    "description": "The country. Available options: CH, DE, FR, US, ES, global. Default: global.",
+                },
+            ],
+        },
+    },
+    {
+        "function": {
+            "name": "get_material_sales_per_country_in_currency",
+            "description": "Get the sales of a material of all countries of a year in a specific currency.",
+            "parameters": [
+                {
+                    "name": "material",
+                    "type": "string",
+                    "description": "The material to search for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year of sales.",
+                },
+                {
+                    "name": "to_currency",
+                    "type": "string",
+                    "description": "The currency. Available options: CHF, USD, EUR",
+                },
+                {
+                    "name": "country",
+                    "type": "string",
+                    "description": "The country. Available options: CH, DE, FR, US, ES, global. Default: global.",
                 },
             ],
         },
@@ -98,7 +137,8 @@ tools_map = {
     "get_suppliers_by_material": get_suppliers_by_material,
     "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
     "excel_test": excel_test,
-    "get_material_sales": get_material_sales
+    "get_material_amount_sold": get_material_amount_sold,
+    "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.

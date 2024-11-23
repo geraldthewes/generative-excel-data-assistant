@@ -1,5 +1,6 @@
 import xlsxwriter
-from data_loader import get_data
+from data_loader import get_data, ColumnType, MetadataType
+from utils import get_currency_conversion_rate
 
 def country_code_to_name(code: str) -> str:
     if code == "CH":
@@ -17,6 +18,9 @@ def country_code_to_name(code: str) -> str:
     else:
         return code
 
+def month_idx_to_name(idx: int) -> str:
+    months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+    return months[idx - 1]
 
 '''
 Using for example "Material Cost_global_2023.xslx", this function returns the suppliers of a given material.
@@ -127,30 +131,31 @@ def excel_test():
 
 '''
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
-Example prompt: How many units of wood have been sold in January 2023?
+Example prompt: How many units of wood have been sold in the first three months of 2023?
 '''
-def get_material_sales(model, material, year: int, month: int):
-    files, metadata, data_frames = get_data(model)
-
-    if not year or not month:
+def get_material_amount_sold(model, material, year: int, month_from: int, month_to: int, country: str) -> str:
+    if not year or not month_from or not month_to:
         return "Please provide a year and a month."
+    
+    files, metadata, data_frames = get_data(model)
     
     if not data_frames:
         return "No data available"
     else:
-        # use only files with material and supplier columns
         def metadata_filter(filename):
             mt = metadata[filename]
-            if str(mt["year_from"]) != str(year):
+            countries_no_match = country != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country
+            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
-            return "material" in columns and "units_sold" in columns
+            return ColumnType.MATERIAL in columns and ColumnType.UNITS_SOLD in columns
         
         files = list(filter(metadata_filter, files))
 
         year = int(year)
-        month = int(month)
+        month_from = int(month_from)
+        month_to = int(month_to)
 
         if len(files) == 0:
             return "No data source available."
@@ -161,19 +166,78 @@ def get_material_sales(model, material, year: int, month: int):
             mt = metadata[file]
             columns = mt["columns"]
 
-            material_col = data_frames[file][columns["material"]].str.lower()
-            month_col = data_frames[file][columns["month"]]
-            result = df[(material_col == material.lower()) & (month_col == month)]
+            material_col = data_frames[file][columns[ColumnType.MATERIAL]].str.lower()
+            month_col = data_frames[file][columns[ColumnType.MONTH]]
+            result = df[(material_col == material.lower()) & (month_col.between(month_from, month_to))]
         
             if result.shape[0] > 0:
-                column = columns["units_sold"]
-                country = country_code_to_name(mt["country_code"])
-                number_of_sold_units_txt += f"{country}: {result[column].sum()}\n"
+                unit_column = columns[ColumnType.UNITS_SOLD]
+                country = country_code_to_name(mt[MetadataType.COUNTRY_CODE])
+                number_of_sold_units_txt += f"{country}: {result[unit_column].sum()}\n"
         
         if not number_of_sold_units_txt:
-            return f"No sales found for {material} in {month} {year}."
+            return f"No sales found for {material} from {month_from} to {month_to} in {year}."
 
-        number_of_sold_units_txt = f"Number of units sold for {material} in {month} {year}:\n" + number_of_sold_units_txt
+        number_of_sold_units_txt = f"Number of units of {material} sold from {month_idx_to_name(month_from)} to {month_idx_to_name(month_to)} in {year}:\n" + number_of_sold_units_txt
         return number_of_sold_units_txt
-    
 
+'''
+Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
+Example prompt: List the sales of wood in 2023 in Swiss Francs
+'''
+def get_material_sales_per_country_in_currency(model, material: str, year: int, to_currency: str, country: str) -> str:
+    allowed_currencies = ["USD", "CHF", "EUR"]
+    if to_currency not in allowed_currencies:
+        return "Only " + ", ".join(allowed_currencies) + " are allowed"
+    
+    year = int(year)
+
+    files, metadata, data_frames = get_data(model)
+    
+    if not data_frames:
+        return "No data available"
+    else:
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            countries_no_match = country != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country
+            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
+                return False
+
+            columns = mt["columns"].keys()
+            return ColumnType.MATERIAL in columns and (ColumnType.UNITS_SOLD in columns)
+        
+        files = list(filter(metadata_filter, files))
+
+        if len(files) == 0:
+            return "No data source available."
+
+        number_of_sold_units_txt = ""
+        for file in files:
+            df = data_frames[file]
+            mt = metadata[file]
+            columns = mt["columns"]
+
+            material_col = data_frames[file][columns[ColumnType.MATERIAL]].str.lower()
+            result = df[(material_col == material.lower())]
+
+            if result.shape[0] > 0:
+                if ColumnType.TOTAL_SALES_DOLLAR in columns:
+                    sales_column = columns[ColumnType.TOTAL_SALES_DOLLAR]
+                    from_currency = "USD"
+                elif ColumnType.TOTAL_SALES_EURO in columns:
+                    sales_column = columns[ColumnType.TOTAL_SALES_EURO]
+                    from_currency = "EUR"
+
+                rate = get_currency_conversion_rate(from_currency, to_currency)
+                total_sales = result[sales_column].multiply(rate).sum().round(2)
+
+
+                country = country_code_to_name(mt[MetadataType.COUNTRY_CODE])
+                number_of_sold_units_txt += f"{country}: {total_sales} {to_currency}\n"
+        
+        if not number_of_sold_units_txt:
+            return f"No sales found for {material} in {year}."
+
+        number_of_sold_units_txt = f"Amount of {material} sold in {year} ({country}):\n" + number_of_sold_units_txt
+        return number_of_sold_units_txt
+            
