@@ -1,4 +1,5 @@
 import json
+import requests
 
 def answer_to_json(answer: str) -> dict:
   start_json = 0
@@ -15,9 +16,29 @@ def answer_to_json(answer: str) -> dict:
   json_string = answer[start_json:end_json + 1]
   print(f'extracted json_string from llm answer: {json_string}')
   if json_string == "":
-    raise ValueError("Could not extract llm ansewr:", answer)
+    raise ValueError(f"Could not extract llm ansewr: '{answer}'")
   try:
     answer_json = json.loads(json_string)
     return answer_json
   except Exception as e:
     raise ValueError(f"Error parsing json: {e}")
+  
+
+def get_currency_exchange_rates_chf_base():
+    url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/chf.json"
+    response = requests.get(url)
+    data = response.json()["chf"]
+    return data
+
+def get_currency_conversion_rate(from_currency, to_currency):
+    exchange_rates_chf_base = get_currency_exchange_rates_chf_base()
+    from_currency = from_currency.lower()
+    to_currency = to_currency.lower()
+    if from_currency == to_currency:
+        return 1
+    elif from_currency == "chf":
+        return exchange_rates_chf_base[to_currency]
+    elif to_currency == "chf":
+        return 1 / exchange_rates_chf_base[from_currency]
+    else:
+        return exchange_rates_chf_base[to_currency] / exchange_rates_chf_base[from_currency]
