@@ -16,7 +16,7 @@ def answer_to_json(answer: str) -> dict:
   json_string = answer[start_json:end_json + 1]
   print(f'extracted json_string from llm answer: {json_string}')
   if json_string == "":
-    raise ValueError(f"Could not extract llm ansewr: '{answer}'")
+    raise ValueError(f"Could not extract llm answer: '{answer}'")
   try:
     answer_json = json.loads(json_string)
     return answer_json
