@@ -28,7 +28,7 @@ def load_metadata_cache():
             date = parts[0]
             filename = parts[1]
             if date != datetime.now().strftime("%Y-%m-%d"):
-                os.remove(f'tmp/{filename}')
+                os.remove(f'tmp/{date}_{filename}')
                 continue
             with open(f'tmp/{date}_{filename}', 'r') as f:
                 metadata[filename.split(".json")[0]] = json.load(f)
