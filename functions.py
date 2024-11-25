@@ -53,6 +53,20 @@ def get_suppliers_by_material(model, material: str) -> str:
         if not suppliers:
             return f"No suppliers found. It might be that no relavant excel file was uploaded, or the material '{material}' was not found."
         return suppliers
+
+def get_suppliers_by_material_and_year(model, material: str) -> str:
+    files, metadata, data_frames = get_data(model)
+    
+    if not data_frames:
+        return "No data available"
+    else:
+        # use only files with material and supplier columns
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            columns = mt["columns"].keys()
+            return "material" in columns and "supplier" in columns
+        
+        pass
             
         
 def quarter_to_month(quarter: str) -> (int, int):
