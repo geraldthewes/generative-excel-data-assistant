@@ -10,6 +10,9 @@ from functions import (
 )
 from utils import answer_to_json
 import traceback
+from dotenv import load_dotenv
+
+load_dotenv()
 
 tool_descriptions = [
     {
@@ -238,7 +241,7 @@ class FunctionAgent:
             yield str(e) + str(answer)
 
 if __name__ == "__main__":
-    llm = llm_factory("llmhub")
+    llm = llm_factory(os.getenv("MODEL_NAME", ""))
     llm = FunctionAgent(llm)
     res = ""
     for x in llm([{"role": "user", "content": "Hello, how are you?"}]):

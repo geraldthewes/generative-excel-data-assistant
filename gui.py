@@ -6,8 +6,11 @@ from function_calling_agent import FunctionAgent
 from llm_factory import llm_factory
 from typing import List, Dict, Any
 from datetime import datetime
+from dotenv import load_dotenv
 
-llm = llm_factory("llmhub")
+load_dotenv()
+
+llm = llm_factory(os.getenv("MODEL_NAME", ""))
 calling_agent = FunctionAgent(llm)
 
 # Define the tmp folder
@@ -23,7 +26,7 @@ def cleanup():
 if not os.path.exists(tmp_folder):
     os.makedirs(tmp_folder)
 
-with gr.Blocks() as demo:
+with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
     msg: gr.Textbox = gr.Textbox()
