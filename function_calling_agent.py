@@ -1,6 +1,8 @@
 from llm_factory import llm_factory
 from functions import (
     get_suppliers_by_material,
+    get_suppliers_by_material_and_year,
+    get_material_cost_by_year,
     compare_price_per_unit_by_quarters,
     excel_test,
     get_material_amount_sold,
@@ -26,6 +28,42 @@ tool_descriptions = [
                     "name": "material",
                     "type": "string",
                     "description": "The material to search for.",
+                },
+            ],
+        },
+    },
+    {
+        "function": {
+            "name": "get_suppliers_by_material_and_year",
+            "description": "Get suppliers that deliver a material in a specific year.",
+            "parameters": [
+                {
+                    "name": "material",
+                    "type": "string",
+                    "description": "The material to search for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to search for.",
+                },
+            ],
+        },
+    },
+    {
+        "function": {
+            "name": "get_material_cost_by_year",
+            "description": "Get the cost of a material in a specific year.",
+            "parameters": [
+                {
+                    "name": "material",
+                    "type": "string",
+                    "description": "The material to search for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to search for.",
                 },
             ],
         },
@@ -135,6 +173,8 @@ tool_descriptions = [
 
 tools_map = {
     "get_suppliers_by_material": get_suppliers_by_material,
+    "get_suppliers_by_material_and_year": get_suppliers_by_material_and_year,
+    "get_material_cost_by_year": get_material_cost_by_year,
     "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
     "excel_test": excel_test,
     "get_material_amount_sold": get_material_amount_sold,

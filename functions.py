@@ -54,21 +54,72 @@ def get_suppliers_by_material(model, material: str) -> str:
             return f"No suppliers found. It might be that no relavant excel file was uploaded, or the material '{material}' was not found."
         return suppliers
 
-def get_suppliers_by_material_and_year(model, material: str) -> str:
+'''
+Using for example "Material Inventory_US_2023.xlsx", this function returns the suppliers of a given material in a given year.
+Example prompt: Get suppliers of wood in 2023.
+'''
+def get_suppliers_by_material_and_year(model, material: str, year: int) -> str:
     files, metadata, data_frames = get_data(model)
     
     if not data_frames:
         return "No data available"
     else:
-        # use only files with material and supplier columns
+        # use only files with material, supplier columns and matching year
         def metadata_filter(filename):
             mt = metadata[filename]
             columns = mt["columns"].keys()
-            return "material" in columns and "supplier" in columns
+            return "material" in columns and "supplier" in columns and int(mt[MetadataType.YEAR_FROM]) == int(year) and int(mt[MetadataType.YEAR_TO]) == int(year)
         
-        pass
-            
+        files = list(filter(metadata_filter, files))
+
+        suppliers = ""
+        for file in files:
+            df = data_frames[file]
+
+            filtered_rows = df["Material"].str.lower()
+            result = df[filtered_rows == material.lower()]
         
+            if result.shape[0] > 0:
+                suppliers += ", ".join(result["Supplier"].to_list())
+
+        if not suppliers:
+            return f"No suppliers found. It might be that no relevant excel file was uploaded, or the material '{material}' was not found."
+        return suppliers
+
+'''
+Using for example "Material Cost_global_2018-2022.xlsx", this function returns the price of a material in a given year and the file it was found in.
+Example prompt: Where can I find the cost for wood in the year 2023 and what was it?
+'''
+def get_material_cost_by_year(model, material: str, year: int) -> str:
+    files, metadata, data_frames = get_data(model)
+
+    if not data_frames:
+        return "No data available"
+    else:
+        # use only files with material and price columns
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            columns = mt["columns"].keys()
+            return "material" in columns and "cost_per_unit_dollar" in columns and int(mt[MetadataType.YEAR_FROM]) >= int(year) and int(mt[MetadataType.YEAR_TO]) <= int(year)
+    
+        files = list(filter(metadata_filter, files))
+
+        if len(files) > 1:
+            return "Too many data sources available: " + ", ".join(files)
+        elif len(files) == 0:
+            return "No data source available."
+
+        file = files[0]
+        df = data_frames[file]
+        filtered_rows = df["Material"].str.lower()
+        result = df[filtered_rows == material.lower()]
+
+        if result.shape[0] == 0:
+            return f"No cost found for {material} in {year}."
+
+        return f"Cost of {material} in {year}: {result['Cost per Unit ($)'].values[0]} USD found in `{file}`"
+
+
 def quarter_to_month(quarter: str) -> (int, int):
     if quarter.lower() == "q1":
         return 1, 3

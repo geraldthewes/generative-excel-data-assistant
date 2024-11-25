@@ -24,8 +24,10 @@ if not os.path.exists(tmp_folder):
     os.makedirs(tmp_folder)
 
 with gr.Blocks() as demo:
+    gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
     msg: gr.Textbox = gr.Textbox()
+    send_button: gr.Button = gr.Button("Send", variant="primary")
     file_upload: gr.File = gr.File(file_types=[".xls", ".xlsx"], file_count="multiple")
     clear: gr.Button = gr.Button("Clear Chat")
         
@@ -41,6 +43,10 @@ with gr.Blocks() as demo:
     msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(
         bot, chatbot, chatbot
     )
+    send_button.click(user, [msg, chatbot], [msg, chatbot], queue=False).then(
+        bot, chatbot, chatbot
+    )
+
     clear.click(lambda: None, None, chatbot, queue=False)
     
     file_upload.upload(

@@ -1,5 +1,6 @@
 import json
 import requests
+import os
 
 def answer_to_json(answer: str) -> dict:
   start_json = 0
