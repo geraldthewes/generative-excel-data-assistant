@@ -270,7 +270,7 @@ def get_total_sales_per_month_dataframe(model, country: str, material=None, year
     files, metadata, data_frames = get_data(model)
 
     if not data_frames:
-        return "No data available."
+        raise FileNotFoundError("No data source available.")
     
     def country_filter(filename):
         mt = metadata[filename]
@@ -291,7 +291,7 @@ def get_total_sales_per_month_dataframe(model, country: str, material=None, year
     print(f"files: {files}\n\n")
 
     if len(files) == 0:
-        return "No data source available."
+        raise FileNotFoundError("After filtering for given criteria, no data source was found.")
     
     df = data_frames[files[0]]
     mt = metadata[files[0]]
