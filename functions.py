@@ -259,7 +259,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         number_of_sold_units_txt = f"Amount of {material} sold in {year} ({country}):\n" + number_of_sold_units_txt
         return number_of_sold_units_txt   
     
-def get_total_sales_per_month_dataframe(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12):
+def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
     month_from = int(month_from)
     month_to = int(month_to)
     year = int(year)
@@ -287,9 +287,6 @@ def get_total_sales_per_month_dataframe(model, country: str, material=None, year
     
     files = list(filter(year_filter, files))
 
-    print(f"metadata: {metadata}\n\n")
-    print(f"files: {files}\n\n")
-
     if len(files) == 0:
         raise FileNotFoundError("After filtering for given criteria, no data source was found.")
     
@@ -309,10 +306,10 @@ def get_total_sales_per_month_dataframe(model, country: str, material=None, year
     df[month_col] = df[month_col].apply(lambda x: list(calendar.month_name).index(x) if isinstance(x, str) else x)
 
     # Group by month and sum the sales and units
-    grouped_df = df.groupby(mt["columns"]["month"]).agg(
-        Units_Sold=(mt["columns"]["units_sold"], 'sum'),
-        Total_Sales=(sales_column, 'sum')
-    ).reset_index()
+    grouped_df = df.groupby(mt["columns"]["month"]).agg({
+        mt["columns"][ColumnType.UNITS_SOLD]: 'sum',
+        sales_column: 'sum',
+    }).reset_index()
 
     # Filter by month range
     grouped_df = grouped_df[(grouped_df[mt["columns"]["month"]] >= month_from) & (grouped_df[mt["columns"]["month"]] <= month_to)]
@@ -321,19 +318,33 @@ def get_total_sales_per_month_dataframe(model, country: str, material=None, year
     grouped_df[mt["columns"]["month"]] = grouped_df[mt["columns"]["month"]].apply(lambda x: calendar.month_abbr[int(x)])
     grouped_df.rename(columns={mt["columns"]["month"]: "Month"}, inplace=True)
 
+    # Convert currency to USD
+    columns = mt["columns"]
+    if ColumnType.TOTAL_SALES_DOLLAR in columns:
+        sales_column = columns[ColumnType.TOTAL_SALES_DOLLAR]
+        from_currency = "USD"
+    elif ColumnType.TOTAL_SALES_EURO in columns:
+        sales_column = columns[ColumnType.TOTAL_SALES_EURO]
+        from_currency = "EUR"
+    else:
+        raise AssertionError("Total Sales column not found in metadata.")
+
+    if from_currency != to_currency:
+        rate = get_currency_conversion_rate(from_currency, to_currency)
+        grouped_df[sales_column] = (grouped_df[sales_column] * rate).round(2)
+        grouped_df.rename(columns={sales_column: f"Total Sales ({to_currency})"}, inplace=True)
+
     return grouped_df
 
 '''
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: Return the total Sales of Switzerland for each month in 2023.
 '''
-def get_total_sales_per_month(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12):
-    grouped_df = get_total_sales_per_month_dataframe(model, country, material, year, month_from, month_to)
-    result = f"Total amount of units sold in {country} from {calendar.month_name[int(month_from)]} to {calendar.month_name[int(month_to)]} {year}:\n"
-    result += f"Month, Units Sold, Total Sales\n"
+def get_total_sales_per_months_for_country_for_year_for_material_in_currency(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD") -> str:
+    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country, material, year, month_from, month_to, to_currency)
 
-    print(f"grouped_df: {grouped_df}\n\n")
-    for row in grouped_df.itertuples():
-        result += f"{row.Month}: {row.Units_Sold}, {row.Total_Sales}\n"
+    material_info = f" for {material}" if material else ""
+    result = f"Total amount of units sold and total sales {material_info} in {country_code_to_name(country)} from {calendar.month_name[int(month_from)]} to {calendar.month_name[int(month_to)]} {year}:\n"
+    result += f"<pre>{grouped_df.to_string(index=False)}</pre>"
 
     return result

@@ -5,7 +5,7 @@ from functions import (
     excel_test,
     get_material_amount_sold,
     get_material_sales_per_country_in_currency,
-    get_total_sales_per_month,
+    get_total_sales_per_months_for_country_for_year_for_material_in_currency,
 )
 from utils import answer_to_json
 import traceback
@@ -106,8 +106,8 @@ tool_descriptions = [
     },
     {
         "function": {
-            "name": "get_material_sales_per_country_in_currency",
-            "description": "Get the sales of a material of all countries of a year in a specific currency.",
+            "name": "get_material_sales_per_country",
+            "description": "Get the sales of a material of a specific country of a year in a specific currency in one call. This function cannot be used to get the sales grouped by month, as it only summarizes the data by the given specific year.",
             "parameters": [
                 {
                     "name": "material",
@@ -134,8 +134,8 @@ tool_descriptions = [
     },
     {
         "function": {
-            "name": "get_total_sales_per_month",
-            "description": "Get the total sales for a specific country grouped by months (for each month) for a specific year in a country.",
+            "name": "get_total_sales_per_months_for_country_for_year_for_material_in_currency",
+            "description": "Get the total sales for a specific country grouped by months (for each month) for one specific year in one specific country, occasionally for one specific material. It groups the sales by month and returns the total sales for each month, but only for a specific country. It will return the sales in the wished currency, if specified. This function cannot get data for multiple countries in one call.",
             "parameters": [
                 {
                     "name": "country",
@@ -162,6 +162,11 @@ tool_descriptions = [
                     "type": "string, None",
                     "description": "The material to get the evolution of sales for. Optional.",
                 },
+                {
+                    "name": "to_currency",
+                    "type": "string",
+                    "description": "The currency to get the evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
+                }
             ],
         },
     },
@@ -173,7 +178,7 @@ tools_map = {
     "excel_test": excel_test,
     "get_material_amount_sold": get_material_amount_sold,
     "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency,
-    "get_total_sales_per_month": get_total_sales_per_month,
+    "get_total_sales_per_months_for_country_for_year_for_material_in_currency": get_total_sales_per_months_for_country_for_year_for_material_in_currency,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
