@@ -1,8 +1,10 @@
+import gradio as gr
 import xlsxwriter
 from data_loader import get_data, ColumnType, MetadataType
 from utils import get_currency_conversion_rate
 from datetime import datetime
 import calendar
+import plotly.express as px
 
 def country_code_to_name(code: str) -> str:
     if code == "CH":
@@ -413,3 +415,18 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency(mod
     result += f"<pre>{grouped_df.to_string(index=False)}</pre>"
 
     return result
+
+def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
+    
+    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country, material, year, month_from, month_to, to_currency)
+
+    material_info = f" for {material}" if material else ""
+    fig = px.bar(
+        grouped_df,
+        x=grouped_df.columns[0],
+        y=[grouped_df.columns[1], grouped_df.columns[2]],
+        barmode="group",
+        title=f"Total Sold Units and Sales in {country_code_to_name(country)} in {year}{material_info}"
+    )
+    
+    return gr.Plot(fig)

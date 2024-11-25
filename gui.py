@@ -38,9 +38,10 @@ with gr.Blocks(theme=gr.themes.Ocean()) as demo:
         return "", history + [{"role": "user", "content": user_message}]
 
     def bot(history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        history.append({"role": "assistant", "content": ""})
-        for x in calling_agent(history[:-1]):
-            history[-1]["content"] += x
+        msg = {"role": "assistant", "content": ""}
+        for x in calling_agent(history):
+            msg["content"] = x
+            history.append(msg)
             yield history
 
     msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(
