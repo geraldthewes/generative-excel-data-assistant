@@ -5,6 +5,7 @@ from functions import (
     excel_test,
     get_material_amount_sold,
     get_material_sales_per_country_in_currency,
+    get_total_sales_per_month,
 )
 from utils import answer_to_json
 import traceback
@@ -131,6 +132,39 @@ tool_descriptions = [
             ],
         },
     },
+    {
+        "function": {
+            "name": "get_total_sales_per_month",
+            "description": "Get the total sales for a specific country grouped by months (for each month) for a specific year in a country.",
+            "parameters": [
+                {
+                    "name": "country",
+                    "type": "string",
+                    "description": "The country to plot the evolution of sales for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to plot the evolution of sales for.",
+                },
+                {
+                    "name": "month_from",
+                    "type": "string",
+                    "description": "The starting month to plot the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                },
+                {
+                    "name": "month_to",
+                    "type": "string",
+                    "description": "The ending month to get the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                },
+                {
+                    "name": "material",
+                    "type": "string, None",
+                    "description": "The material to get the evolution of sales for. Optional.",
+                },
+            ],
+        },
+    },
 ]
 
 tools_map = {
@@ -138,7 +172,8 @@ tools_map = {
     "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
     "excel_test": excel_test,
     "get_material_amount_sold": get_material_amount_sold,
-    "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency
+    "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency,
+    "get_total_sales_per_month": get_total_sales_per_month,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
