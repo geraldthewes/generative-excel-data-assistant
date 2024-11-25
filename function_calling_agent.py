@@ -8,6 +8,7 @@ from functions import (
     get_material_amount_sold,
     get_material_sales_per_country_in_currency,
     get_total_sales_per_months_for_country_for_year_for_material_in_currency,
+    plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
 )
 from utils import answer_to_json
 import traceback
@@ -181,17 +182,17 @@ tool_descriptions = [
                 {
                     "name": "country",
                     "type": "string",
-                    "description": "The country to plot the evolution of sales for.",
+                    "description": "The country to get the evolution of sales for.",
                 },
                 {
                     "name": "year",
                     "type": "int",
-                    "description": "The year to plot the evolution of sales for.",
+                    "description": "The year to get the evolution of sales for.",
                 },
                 {
                     "name": "month_from",
                     "type": "string",
-                    "description": "The starting month to plot the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                    "description": "The starting month to get the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
                 },
                 {
                     "name": "month_to",
@@ -211,6 +212,44 @@ tool_descriptions = [
             ],
         },
     },
+    {
+        "function": {
+            "name": "plot_total_sales_per_months_for_country_for_year_for_material_in_currency",
+            "description": "Plot a graph or chart diagram of the total sales for a specific country grouped by months (for each month) for one specific year in one specific country, occasionally for one specific material. It groups the sales by month and returns the total sales for each month, but only for a specific country. It will return a plot graphic with the sales in the wished currency, if specified. This function cannot get data for multiple countries in one call.",
+            "parameters": [
+                {
+                    "name": "country",
+                    "type": "string",
+                    "description": "The country to plot the evolution of sales for.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to plot the evolution of sales for.",
+                },
+                {
+                    "name": "month_from",
+                    "type": "string",
+                    "description": "The starting month to plot the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                },
+                {
+                    "name": "month_to",
+                    "type": "string",
+                    "description": "The ending month to plot the evolution of sales for. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12.",
+                },
+                {
+                    "name": "material",
+                    "type": "string, None",
+                    "description": "The material to get plot evolution of sales for. Optional.",
+                },
+                {
+                    "name": "to_currency",
+                    "type": "string",
+                    "description": "The currency to get plot evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
+                }
+            ],
+        },
+    }
 ]
 
 tools_map = {
@@ -222,6 +261,7 @@ tools_map = {
     "get_material_amount_sold": get_material_amount_sold,
     "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency,
     "get_total_sales_per_months_for_country_for_year_for_material_in_currency": get_total_sales_per_months_for_country_for_year_for_material_in_currency,
+    "plot_total_sales_per_months_for_country_for_year_for_material_in_currency": plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
