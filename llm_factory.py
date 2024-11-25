@@ -3,9 +3,9 @@ import time
 from llmhub_client import LLMHub
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from dotenv import load_dotenv
+import ollama
 
 load_dotenv()
-
 
 class LlmHubWrapper:
     def __init__(self):
@@ -29,7 +29,7 @@ class LlmHubWrapper:
 
 
 class Phi3Wrapper:
-    def __init__(self, model_name):
+    def __init__(self, model_name: str):
         self.model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="cuda",
@@ -53,15 +53,28 @@ class Phi3Wrapper:
         output = self.pipe(history, **self.generation_args)
         return output[0]["generated_text"]
 
+class OllamaWrapper:
+    def __init__(self, model_name: str):
+        self.model = model_name
+        self.client = ollama.Client()
+
+    def __call__(self, history: list):
+        try:
+            response = self.client.chat(model=self.model, messages=history)
+            return response['message']['content']
+        except Exception as e:
+            raise ValueError(f"Ollama error: {str(e)}")
 
 def llm_factory(model_name: str):
     if model_name == "llmhub":
         return LlmHubWrapper()
     elif model_name == "phi3":
         return Phi3Wrapper("microsoft/Phi-3.5-mini-instruct")
+    elif model_name == "llama3.2":
+        return OllamaWrapper("llama3.2")
     else:
         raise ValueError(f"Model {model_name} not supported")
 
-
 if __name__ == "__main__":
-    llm = llm_factory("llmhub")
+    llm = llm_factory(os.getenv("MODEL_NAME", ""))
+    print(f"Model in use: {os.getenv('MODEL_NAME', '')}")

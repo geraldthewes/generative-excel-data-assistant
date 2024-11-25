@@ -9,4 +9,5 @@ matplotlib
 openai
 gradio
 transformers>=4.46.1
+ollama
 git+https://gitlab.ost.ch/generative-ai/student-space/llmhub-client.git
