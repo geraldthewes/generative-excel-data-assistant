@@ -296,10 +296,11 @@ prompt_end = """```
 
 Remember to only give the json object as output, without any additional text."""
 
+
 class FunctionAgent:
     def __init__(self, model):
         self.model = model
-    
+
     def __call__(self, messages: list[dict[str, str]]):
         try:
             input_text = messages[-1]["content"]
@@ -319,11 +320,12 @@ class FunctionAgent:
                     yield x
             else:
                 parameters = answer_json["parameters"]
-                print(f'Calling function {function_name} with parameters {parameters}')
+                print(f"\n\n--- Calling function {function_name} with parameters {parameters} ---\n\n")
                 yield tools_map[function_name](self.model, **parameters)
         except Exception as e:
             traceback.print_exc()
-            yield str(e) + str(answer)
+            yield str(e)
+
 
 if __name__ == "__main__":
     llm = llm_factory(os.getenv("MODEL_NAME", ""))
