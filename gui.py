@@ -33,15 +33,19 @@ with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     send_button: gr.Button = gr.Button("Send", variant="primary")
     file_upload: gr.File = gr.File(file_types=[".xls", ".xlsx"], file_count="multiple")
     clear: gr.Button = gr.Button("Clear Chat")
-        
-    def user(user_message: str, history: List[Dict[str, Any]]) -> (str, List[Dict[str, Any]]):
+
+    def user(
+        user_message: str, history: List[Dict[str, Any]]
+    ) -> (str, List[Dict[str, Any]]):
         return "", history + [{"role": "user", "content": user_message}]
 
     def bot(history: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        msg = {"role": "assistant", "content": ""}
-        for x in calling_agent(history):
-            msg["content"] = x
-            history.append(msg)
+        history.append({"role": "assistant", "content": ""})
+        for x in calling_agent(history[:-1]):
+            if type(x) == str:  # allow llm answer stream
+                history[-1]["content"] += x
+            else:  # allow gradio blocks in chat
+                history[-1]["content"] = x
             yield history
 
     msg.submit(user, [msg, chatbot], [msg, chatbot], queue=False).then(
@@ -52,16 +56,16 @@ with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     )
 
     clear.click(lambda: None, None, chatbot, queue=False)
-    
+
     file_upload.upload(
         lambda files: [shutil.copy(file.name, tmp_folder) for file in files],
         inputs=file_upload,
-        outputs=[]
+        outputs=[],
     )
 
 def main_gui() -> None:
     demo.launch()
 
 if __name__ == "__main__":
-    cleanup()  # Delete the tmp folder after the function is killed
+    # cleanup()  # Delete the tmp folder after the function is killed
     main_gui()
