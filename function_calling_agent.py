@@ -208,7 +208,7 @@ tool_descriptions = [
                     "name": "to_currency",
                     "type": "string",
                     "description": "The currency to get the evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
-                }
+                },
             ],
         },
     },
@@ -246,10 +246,15 @@ tool_descriptions = [
                     "name": "to_currency",
                     "type": "string",
                     "description": "The currency to get plot evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
-                }
+                },
+                {
+                    "name": "to_plot",
+                    "type": "string",
+                    "description": "What metric to plot. Available options: sales, units, both. DEFAULT: sales.",
+                },
             ],
         },
-    }
+    },
 ]
 
 tools_map = {

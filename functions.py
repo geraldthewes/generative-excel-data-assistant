@@ -333,25 +333,31 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
 
     assert month_from <= month_to, f"Invalid month range. 'month_from' ({month_from}) must be smaller than 'month_to' ({month_to})."
     assert year <= 2023, f"Invalid year: '{year}'."
-    
+
     files, metadata, data_frames = get_data(model)
 
     if not data_frames:
         raise FileNotFoundError("No data source available.")
-    
+
+    def sales_filter(filename):
+        mt = metadata[filename]
+        return mt[MetadataType.TYPE] == "sales"
+
+    files = list(filter(sales_filter, files))
+
     def country_filter(filename):
         mt = metadata[filename]
         return mt["country_code"] == name_to_country_code(country)
-    
+
     files = list(filter(country_filter, files))
 
     def year_filter(filename):
         mt = metadata[filename]
-        year_from = mt["year_from"]
-        year_to = mt["year_to"] or (year_from + 1)  # +1 because year_to is exclusive
+        year_from = int(mt["year_from"])
+        year_to = int(mt["year_to"]) or (year_from + 1)  # +1 because year_to is exclusive
         year_range = range(year_from, year_to + (1 if year_to == year_from else 0))
         return year in year_range
-    
+
     files = list(filter(year_filter, files))
 
     if len(files) == 0:
@@ -362,7 +368,7 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
 
     if material:
         df = df[df[mt["columns"]["material"]].str.lower() == material.lower()]
-    
+
     # Dynamically retrieve "Total Sales" column name
     sales_column = next((col for col in mt["columns"].values() if "umsatz" in col.lower() or "sales" in col.lower()), None)
     if not sales_column:
@@ -386,7 +392,7 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
     grouped_df.rename(columns={mt["columns"]["month"]: "Month"}, inplace=True)
 
     # Convert currency to USD
-    columns = mt["columns"]
+    columns = mt[MetadataType.COLUMNS]
     if ColumnType.TOTAL_SALES_DOLLAR in columns:
         sales_column = columns[ColumnType.TOTAL_SALES_DOLLAR]
         from_currency = "USD"
@@ -399,7 +405,9 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
     if from_currency != to_currency:
         rate = get_currency_conversion_rate(from_currency, to_currency)
         grouped_df[sales_column] = (grouped_df[sales_column] * rate).round(2)
-        grouped_df.rename(columns={sales_column: f"Total Sales ({to_currency})"}, inplace=True)
+        grouped_df.rename(
+            columns={sales_column: f"Total Sales ({to_currency})"}, inplace=True
+        )
 
     return grouped_df
 
@@ -407,8 +415,18 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: Return the total Sales of Switzerland for each month in 2023.
 '''
-def get_total_sales_per_months_for_country_for_year_for_material_in_currency(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD") -> str:
-    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country, material, year, month_from, month_to, to_currency)
+def get_total_sales_per_months_for_country_for_year_for_material_in_currency(
+    model,
+    country: str,
+    material=None,
+    year: int = 2023,
+    month_from: int = 1,
+    month_to: int = 12,
+    to_currency="USD",
+) -> str:
+    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(
+        model, country, material, year, month_from, month_to, to_currency
+    )
 
     material_info = f" for {material}" if material else ""
     result = f"Total amount of units sold and total sales {material_info} in {country_code_to_name(country)} from {calendar.month_name[int(month_from)]} to {calendar.month_name[int(month_to)]} {year}:\n"
@@ -416,17 +434,42 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency(mod
 
     return result
 
-def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
-    
-    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country, material, year, month_from, month_to, to_currency)
+'''
+Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
+Example prompt: Show me a plot graphic of both the units sold and the total Sales of the USA from June to October in 2023 in Euro.
+'''
+def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
+    model,
+    country: str,
+    material=None,
+    year: int = 2023,
+    month_from: int = 1,
+    month_to: int = 12,
+    to_currency: str = "USD",
+    to_plot: str = "sales",
+) -> gr.Plot:
+
+    grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(
+        model, country, material, year, month_from, month_to, to_currency
+    )
+
+    if to_plot == "units":
+        y_data = grouped_df.columns[1]
+        title_info = "Total Amount of Units sold"
+    elif to_plot == "both":
+        y_data = [grouped_df.columns[1], grouped_df.columns[2]]
+        title_info = "Total Amount of Units sold and Total Sales"
+    else:
+        y_data = grouped_df.columns[2]
+        title_info = "Total Sales"
 
     material_info = f" for {material}" if material else ""
     fig = px.bar(
         grouped_df,
         x=grouped_df.columns[0],
-        y=[grouped_df.columns[1], grouped_df.columns[2]],
+        y=y_data,
         barmode="group",
-        title=f"Total Sold Units and Sales in {country_code_to_name(country)} in {year}{material_info}"
+        title=f"{title_info} in {country_code_to_name(country)} in {year}{material_info}",
     )
-    
+
     return gr.Plot(fig)
