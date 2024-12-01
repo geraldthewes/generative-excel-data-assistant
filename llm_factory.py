@@ -4,6 +4,7 @@ from llmhub_client import LLMHub
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from dotenv import load_dotenv
 import ollama
+from openai import AzureOpenAI
 
 load_dotenv()
 
@@ -65,6 +66,27 @@ class OllamaWrapper:
         except Exception as e:
             raise ValueError(f"Ollama error: {str(e)}")
 
+class OpenAIWrapper:
+    def __init__(self, model_name: str = "gpt-4o-mini"):
+        self.model = model_name
+        self.client = AzureOpenAI(
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version="2024-02-01",
+        )
+
+    def __call__(self, history: list):
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=history,
+                temperature=0.7,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise ValueError(f"OpenAI error: {str(e)}")
+
+
 def llm_factory(model_name: str):
     if model_name == "llmhub":
         return LlmHubWrapper()
@@ -72,6 +94,8 @@ def llm_factory(model_name: str):
         return Phi3Wrapper("microsoft/Phi-3.5-mini-instruct")
     elif model_name == "llama3.2":
         return OllamaWrapper("llama3.2")
+    elif model_name == "gpt-4o-mini":
+        return OpenAIWrapper("gpt-4o-mini")
     else:
         raise ValueError(f"Model {model_name} not supported")
 
