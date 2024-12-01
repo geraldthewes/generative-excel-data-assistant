@@ -109,7 +109,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
             answer += x
 
         answer_dict = answer_to_json(answer)
-        answer_dict["columns"] = {v.lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
+        answer_dict["columns"] = {str(v).lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
         metadata[filename] = answer_dict
 
         answer_dict["cachesum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()
