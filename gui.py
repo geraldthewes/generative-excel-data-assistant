@@ -67,5 +67,5 @@ def main_gui() -> None:
     demo.launch()
 
 if __name__ == "__main__":
-    # cleanup()  # Delete the tmp folder after the function is killed
+    #cleanup()  # Delete the tmp folder after the function is killed
     main_gui()

@@ -69,7 +69,7 @@ class OllamaWrapper:
 class OpenAIWrapper:
     def __init__(self, model_name: str = "gpt-4o-mini"):
         self.model = model_name
-        client = AzureOpenAI(
+        self.client = AzureOpenAI(
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
             api_version="2024-02-01",
@@ -77,8 +77,7 @@ class OpenAIWrapper:
 
     def __call__(self, history: list):
         try:
-            print("MMMMMMMMMMMMMMMODEL")
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=history,
                 temperature=0.7,
