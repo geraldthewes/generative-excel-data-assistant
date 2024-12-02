@@ -7,6 +7,7 @@ from llm_factory import llm_factory
 from typing import List, Dict, Any
 from datetime import datetime
 from dotenv import load_dotenv
+import json
 
 load_dotenv()
 
@@ -16,15 +17,35 @@ calling_agent = FunctionAgent(llm)
 # Define the tmp folder
 tmp_folder = os.path.join(os.getcwd(), "tmp")
 
+# Ensure tmp folder exists
+if not os.path.exists(tmp_folder):
+    os.makedirs(tmp_folder)
+
 # Function to clean up the tmp folder after program ends
 def cleanup():
+    json_path = os.path.join(tmp_folder, "file_mapping.json")
+    if os.path.exists(json_path):
+        os.remove(json_path)
     if os.path.exists(tmp_folder):
         shutil.rmtree(tmp_folder)
     os.mkdir(tmp_folder)
 
-# Ensure tmp folder exists
-if not os.path.exists(tmp_folder):
-    os.makedirs(tmp_folder)
+def handle_file_upload(files):
+    for file in files:
+        src_path = file.name
+        dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
+        
+        # Check if source and destination are the same
+        if os.path.abspath(src_path) != os.path.abspath(dst_path):
+            shutil.copy(src_path, dst_path)
+
+        # Create a dictionary to map filename to its path
+        file_mapping = {os.path.basename(file.name): os.path.abspath(src_path) for file in files}
+
+        # Save the dictionary as a JSON file in the tmp folder
+        json_path = os.path.join(tmp_folder, "file_mapping.json")
+        with open(json_path, "w") as json_file:
+            json.dump(file_mapping, json_file)
 
 with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
@@ -58,14 +79,13 @@ with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     clear.click(lambda: None, None, chatbot, queue=False)
 
     file_upload.upload(
-        lambda files: [shutil.copy(file.name, tmp_folder) for file in files],
-        inputs=file_upload,
-        outputs=[],
-    )
+        handle_file_upload, inputs=file_upload, outputs=None)
 
 def main_gui() -> None:
     demo.launch()
 
 if __name__ == "__main__":
-    cleanup()  # Delete the tmp folder after the function is killed
-    main_gui()
+    try:
+        main_gui()
+    finally:
+        cleanup()  # Delete the tmp folder and file mapping JSON after the function is killed

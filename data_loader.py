@@ -43,7 +43,7 @@ def load_metadata_cache():
     metadata = {}
     cache_files = os.listdir('tmp')
     for filename in cache_files:
-        if filename.endswith('.json'):
+        if filename.endswith('.json') and not filename.startswith("file_mapping"):
             parts = filename.split('_', 1)
             if len(parts) != 2 or not re.match('^\d{4}-\d{2}-\d{2}$', parts[0]):
                 print(f"Invalid cache file: {filename}")

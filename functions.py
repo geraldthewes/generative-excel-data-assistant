@@ -4,7 +4,9 @@ from data_loader import get_data, ColumnType, MetadataType
 from utils import get_currency_conversion_rate
 from datetime import datetime
 import calendar
+import json
 import plotly.express as px
+import pandas as pd
 
 def country_code_to_name(code: str) -> str:
     if code == "CH":
@@ -473,3 +475,65 @@ def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
     )
 
     return gr.Plot(fig)
+
+
+'''
+Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
+Example prompt: Convert the sales of Switzerland in 2023 to Swiss Francs and add it to the file.
+'''
+def convert_column_to_currency_and_add_to_file(model, currency_code: str, year: int, country_code: str) -> str:
+    allowed_currencies = ["USD", "CHF", "EUR"]
+    if currency_code not in allowed_currencies:
+        return "Only " + ", ".join(allowed_currencies) + " are allowed!"
+    
+    year = int(year)
+
+    files, metadata, data_frames = get_data(model)
+
+    if not data_frames:
+        return "No data available"
+    else:
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            countries_no_match = country_code == "global" and mt[MetadataType.COUNTRY_CODE] == "global" and mt[MetadataType.COUNTRY_CODE] != country_code
+            if str(mt[MetadataType.YEAR_FROM]) != str(year) or countries_no_match:
+                return False
+
+            columns = mt["columns"].keys()
+            return ColumnType.TOTAL_SALES_DOLLAR in columns or ColumnType.TOTAL_SALES_EURO in columns
+        
+        files = list(filter(metadata_filter, files))
+
+        if len(files) == 0:
+            return "No data source available."
+        
+        if len(files) > 1:
+            return "Too many data sources available: " + ", ".join(files)
+
+        df = data_frames[files[0]]
+        mt = metadata[files[0]]
+        columns = mt["columns"]
+
+        if ColumnType.TOTAL_SALES_DOLLAR in columns:
+            sales_column = columns[ColumnType.TOTAL_SALES_DOLLAR]
+            from_currency = "USD"
+        elif ColumnType.TOTAL_SALES_EURO in columns:
+            sales_column = columns[ColumnType.TOTAL_SALES_EURO]
+            from_currency = "EUR"
+
+        converted_sales_column = f"Total Sales ({currency_code})"
+        rate = get_currency_conversion_rate(from_currency, currency_code)
+        df[converted_sales_column] = df[sales_column].multiply(rate).round(2)
+
+        with open('tmp/file_mapping.json', 'r') as f:
+            file_mapping = json.load(f)
+
+        file_path = file_mapping.get(files[0])
+        if not file_path:
+            return f"File path for {files[0]} not found in file_mapping.json."
+
+        writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+        df.to_excel(writer, sheet_name="Sales Data", index=False)
+        writer.close()
+
+        return f'A column has been added to the file. Download <a href="gradio_api/file={file_path}" download>here</a> or download below in the “File” section.'
