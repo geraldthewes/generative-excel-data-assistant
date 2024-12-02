@@ -542,3 +542,63 @@ def convert_column_to_currency_and_add_to_file(model, currency_code: str, year: 
         writer.close()
 
         return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
+
+
+'''
+Files: "Sales data_US_2023.xlsx", etc
+Example prompt: For the Sales data of the US in 2023 add a column that indicates the price per unit. 
+'''
+def convert_column_to_price_per_unit_and_add_file(model, year: int, country_code: str) -> str:
+    
+    year = int(year)
+
+    files, metadata, data_frames = get_data(model)
+
+    if not data_frames:
+        return "No data available"
+    else:
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            
+            # Return False if year or country codes don't match
+            if str(mt[MetadataType.YEAR_FROM]) != str(year) or country_code == "global" or mt[MetadataType.COUNTRY_CODE] == "global" or mt[MetadataType.COUNTRY_CODE] != country_code:
+                return False
+
+            columns = mt["columns"].keys()
+            return (ColumnType.TOTAL_SALES_DOLLAR in columns or ColumnType.TOTAL_SALES_EURO in columns) and ColumnType.UNITS_SOLD in columns
+        
+        files = list(filter(metadata_filter, files))
+
+        if len(files) == 0:
+            return "No data source available."
+        
+        if len(files) > 1:
+            return "Too many data sources available: " + ", ".join(files)
+
+        df = data_frames[files[0]]
+        mt = metadata[files[0]]
+        columns = mt["columns"]
+
+        if ColumnType.TOTAL_SALES_DOLLAR in columns:
+            sales_column = columns[ColumnType.TOTAL_SALES_DOLLAR]
+        elif ColumnType.TOTAL_SALES_EURO in columns:
+            sales_column = columns[ColumnType.TOTAL_SALES_EURO]
+        else:
+            return "Total sales column not found."
+
+        price_per_unit_column = "Price per Unit"
+        df[price_per_unit_column] = (df[sales_column] / df[columns[ColumnType.UNITS_SOLD]]).round(2)
+
+        with open('tmp/file_mapping.json', 'r') as f:
+            file_mapping = json.load(f)
+
+        file_path = file_mapping.get(files[0])
+        if not file_path:
+            return f"File path for {files[0]} not found in file_mapping.json."
+
+        writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+        df.to_excel(writer, sheet_name="Sales Data", index=False)
+        writer.close()
+
+        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
+

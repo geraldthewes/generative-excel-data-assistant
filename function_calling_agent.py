@@ -10,6 +10,7 @@ from functions import (
     get_total_sales_per_months_for_country_for_year_for_material_in_currency,
     plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
     convert_column_to_currency_and_add_to_file,
+    convert_column_to_price_per_unit_and_add_file,
 )
 from utils import answer_to_json
 import traceback
@@ -280,6 +281,24 @@ tool_descriptions = [
             ]
         }
     },
+    {
+        "function": {
+            "name": "convert_column_to_price_per_unit_and_add_file",
+            "description": "Convert a column to price per unit and add it as an extra column in the respective file. The target file is being identified by a country code and a year.",
+            "parameters": [
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year.",
+                },
+                {
+                    "name": "country_code",
+                    "type": "string",
+                    "description": "The country code for which the data has been recorded. Available options: CH, DE, FR, US, ES, global. Default value: global.",
+                },
+            ]
+        }
+    },
 ]
 
 tools_map = {
@@ -293,6 +312,7 @@ tools_map = {
     "get_total_sales_per_months_for_country_for_year_for_material_in_currency": get_total_sales_per_months_for_country_for_year_for_material_in_currency,
     "plot_total_sales_per_months_for_country_for_year_for_material_in_currency": plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
     "convert_column_to_currency_and_add_to_file": convert_column_to_currency_and_add_to_file,
+    "convert_column_to_price_per_unit_and_add_file": convert_column_to_price_per_unit_and_add_file,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
