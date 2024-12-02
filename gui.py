@@ -31,6 +31,7 @@ def cleanup():
     os.mkdir(tmp_folder)
 
 def handle_file_upload(files):
+    print(files)
     for file in files:
         src_path = file.name
         dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
@@ -40,7 +41,7 @@ def handle_file_upload(files):
             shutil.copy(src_path, dst_path)
 
         # Create a dictionary to map filename to its path
-        file_mapping = {os.path.basename(file.name): os.path.abspath(src_path) for file in files}
+        file_mapping = {os.path.basename(file.name): file for file in files}
 
         # Save the dictionary as a JSON file in the tmp folder
         json_path = os.path.join(tmp_folder, "file_mapping.json")

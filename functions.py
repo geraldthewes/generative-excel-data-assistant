@@ -495,8 +495,9 @@ def convert_column_to_currency_and_add_to_file(model, currency_code: str, year: 
     else:
         def metadata_filter(filename):
             mt = metadata[filename]
-            countries_no_match = country_code == "global" and mt[MetadataType.COUNTRY_CODE] == "global" and mt[MetadataType.COUNTRY_CODE] != country_code
-            if str(mt[MetadataType.YEAR_FROM]) != str(year) or countries_no_match:
+            
+            # Return False if year or country codes don't match
+            if str(mt[MetadataType.YEAR_FROM]) != str(year) or country_code == "global" or mt[MetadataType.COUNTRY_CODE] == "global" or mt[MetadataType.COUNTRY_CODE] != country_code:
                 return False
 
             columns = mt["columns"].keys()
@@ -532,8 +533,12 @@ def convert_column_to_currency_and_add_to_file(model, currency_code: str, year: 
         if not file_path:
             return f"File path for {files[0]} not found in file_mapping.json."
 
+        # Translate month index back to month name
+        month_col = columns[ColumnType.MONTH]
+        df[month_col] = df[month_col].apply(lambda x: calendar.month_name[int(x)] if isinstance(x, int) else x)
+
         writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
         df.to_excel(writer, sheet_name="Sales Data", index=False)
         writer.close()
 
-        return f'A column has been added to the file. Download <a href="gradio_api/file={file_path}" download>here</a> or download below in the “File” section.'
+        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
