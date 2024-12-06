@@ -1,13 +1,13 @@
 import gradio as gr
-import pandas as pd
 import os
 import shutil
 from function_calling_agent import FunctionAgent
 from llm_factory import llm_factory
 from typing import List, Dict, Any
-from datetime import datetime
 from dotenv import load_dotenv
 import json
+from data_loader import extract_metadata
+from excel_preparations import ExcelPreparations
 
 load_dotenv()
 
@@ -31,6 +31,7 @@ def cleanup():
     os.mkdir(tmp_folder)
 
 def handle_file_upload(files):
+    tmp_files = []
     for file in files:
         src_path = file.name
         dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
@@ -38,6 +39,7 @@ def handle_file_upload(files):
         # Check if source and destination are the same
         if os.path.abspath(src_path) != os.path.abspath(dst_path):
             shutil.copy(src_path, dst_path)
+        tmp_files.append(dst_path.split("/")[-1])
 
         # Create a dictionary to map filename to its path
         file_mapping = {os.path.basename(file.name): file for file in files}
@@ -47,7 +49,11 @@ def handle_file_upload(files):
         with open(json_path, "w") as json_file:
             json.dump(file_mapping, json_file)
 
-with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
+    excel_preparation = ExcelPreparations()
+    data_frames, info_texts = excel_preparation.read_excel(tmp_files)
+    extract_metadata(llm, tmp_files, data_frames, info_texts)
+
+with gr.Blocks(theme=gr.themes.Ocean()) as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
     msg: gr.Textbox = gr.Textbox()
