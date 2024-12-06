@@ -17,6 +17,13 @@ from utils import answer_to_json
 import traceback
 from dotenv import load_dotenv
 
+from sentence_transformers import SentenceTransformer
+import numpy as np
+import faiss
+
+# Load the pre-trained model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
 load_dotenv()
 
 tool_descriptions = [
@@ -379,6 +386,26 @@ prompt_end = """```
 Remember to only give the json object as output, without any additional text."""
 
 
+# Create embeddings for the function descriptions
+descriptions = [tool["function"]["description"] for tool in tool_descriptions]
+description_embeddings = model.encode(descriptions)
+
+# Convert embeddings to a numpy array
+description_embeddings = np.array(description_embeddings).astype('float32')
+
+# Create a Faiss index
+index = faiss.IndexFlatL2(description_embeddings.shape[1])
+index.add(description_embeddings)
+
+
+def retrieve_top_functions(prompt, top_n=5):
+    # Create embedding for the prompt
+    prompt_embedding = model.encode([prompt]).astype('float32')
+
+    # Search for the top N similar functions
+    _, top_indices = index.search(prompt_embedding, top_n)
+    return [tool_descriptions[i] for i in top_indices[0]]
+
 class FunctionAgent:
     def __init__(self, model):
         self.model = model
@@ -386,15 +413,13 @@ class FunctionAgent:
     def __call__(self, messages: list[dict[str, str]]):
         try:
             input_text = messages[-1]["content"]
+            top_functions = retrieve_top_functions(input_text)
             prompt = (
                 function_calling_prompt.format(
-                    input=input_text, tools=tool_descriptions
+                    input=input_text, tools=top_functions
                 )
                 + prompt_end
             )
-            # debug:
-            # with open("prompt.json", "w") as f:
-            #     f.write(prompt)
             answer = ""
             for x in self.model([{"role": "user", "content": prompt}]):
                 answer += x
