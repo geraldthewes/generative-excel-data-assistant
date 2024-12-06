@@ -423,6 +423,7 @@ def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
     month_to: int = 12,
     to_currency: str = "USD",
     to_plot: str = "sales",
+    plot_type: str = "line",
 ) -> gr.Plot:
 
     grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(
@@ -440,13 +441,21 @@ def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
         title_info = "Total Sales"
 
     material_info = f" for {material}" if material else ""
-    fig = px.bar(
-        grouped_df,
-        x=grouped_df.columns[0],
-        y=y_data,
-        barmode="group",
-        title=f"{title_info} in {country_code_to_name(country_code)} in {year}{material_info}",
-    )
+    if plot_type == "bar":
+        fig = px.bar(
+            grouped_df,
+            x=grouped_df.columns[0],
+            y=y_data,
+            barmode="group",
+            title=f"{title_info} in {country_code_to_name(country_code)} in {year}{material_info}",
+        )
+    else:
+        fig = px.line(
+            grouped_df,
+            x=grouped_df.columns[0],
+            y=y_data,
+            title=f"{title_info} in {country_code_to_name(country_code)} in {year}{material_info}",
+        )
 
     return gr.Plot(fig)
 
