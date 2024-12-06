@@ -28,22 +28,6 @@ def month_idx_to_name(idx: int) -> str:
     months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     return months[idx - 1]
     
-def name_to_country_code(name: str) -> str:
-    if name.lower() == "switzerland":
-        return "CH"
-    elif name.lower() == "germany":
-        return "DE"
-    elif name.lower() == "france":
-        return "FR"
-    elif name.lower() == "united states":
-        return "US"
-    elif name.lower() == "spain":
-        return "ES"
-    elif name.lower() == "global":
-        return "global"
-    else:
-        return name
-
 '''
 Using for example "Material Cost_global_2023.xslx", this function returns the suppliers of a given material.
 Example prompt: Get suppliers of wood
@@ -318,7 +302,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         number_of_sold_units_txt = f"Amount of {material} sold in {year} ({country}):\n" + number_of_sold_units_txt
         return number_of_sold_units_txt   
     
-def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
+def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country_code: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
     month_from = int(month_from)
     month_to = int(month_to)
     year = int(year)
@@ -339,7 +323,7 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
 
     def country_filter(filename):
         mt = metadata[filename]
-        return mt["country_code"] == name_to_country_code(country)
+        return mt["country_code"] == country_code
 
     files = list(filter(country_filter, files))
 
@@ -432,7 +416,7 @@ Example prompt: Show me a plot graphic of both the units sold and the total Sale
 '''
 def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
     model,
-    country: str,
+    country_code: str,
     material=None,
     year: int = 2023,
     month_from: int = 1,
@@ -442,7 +426,7 @@ def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
 ) -> gr.Plot:
 
     grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(
-        model, country, material, year, month_from, month_to, to_currency
+        model, country_code, material, year, month_from, month_to, to_currency
     )
 
     if to_plot == "units":
@@ -461,7 +445,7 @@ def plot_total_sales_per_months_for_country_for_year_for_material_in_currency(
         x=grouped_df.columns[0],
         y=y_data,
         barmode="group",
-        title=f"{title_info} in {country_code_to_name(country)} in {year}{material_info}",
+        title=f"{title_info} in {country_code_to_name(country_code)} in {year}{material_info}",
     )
 
     return gr.Plot(fig)
