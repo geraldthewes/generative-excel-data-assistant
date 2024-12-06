@@ -52,6 +52,8 @@ def load_metadata_cache():
             filename = parts[1]
             if date != datetime.now().strftime("%Y-%m-%d"):
                 os.remove(f'tmp/{date}_{filename}')
+                xlsx_filename = filename.replace(".json", "")
+                os.remove(f'tmp/{xlsx_filename}')
                 continue
             with open(f'tmp/{date}_{filename}', 'r') as f:
                 metadata[filename.split(".json")[0]] = json.load(f)

@@ -4,7 +4,6 @@ from functions import (
     get_suppliers_by_material_and_year,
     get_material_cost_by_year,
     compare_price_per_unit_by_quarters,
-    excel_test,
     get_material_amount_sold,
     get_material_sales_per_country_in_currency,
     get_total_sales_per_months_for_country_for_year_for_material_in_currency,
@@ -12,6 +11,7 @@ from functions import (
     convert_column_to_currency_and_add_to_file,
     convert_column_to_price_per_unit_and_add_file,
     get_excel_formula,
+    change_supplier_name_in_files,
 )
 from utils import answer_to_json
 import traceback
@@ -107,13 +107,6 @@ tool_descriptions = [
                     "description": "The year of the second quarter.",
                 },
             ],
-        },
-    },
-    {
-        "function": {
-            "name": "excel_test",
-            "description": "Create a test excel file.",
-            "parameters": [],
         },
     },
     {
@@ -322,6 +315,24 @@ tool_descriptions = [
                 },
             ],
         },
+    },
+    {
+        "function": {
+            "name": "change_supplier_name_in_files",
+            "description": "Change the name of a supplier in all files.",
+            "parameters": [
+                {
+                    "name": "supplier_name_from",
+                    "type": "string",
+                    "description": "The supplier name to search for.",
+                },
+                {
+                    "name": "supplier_name_to",
+                    "type": "string",
+                    "description": "The supplier name to change to.",
+                },
+            ],
+        },
     }
 ]
 
@@ -330,7 +341,6 @@ tools_map = {
     "get_suppliers_by_material_and_year": get_suppliers_by_material_and_year,
     "get_material_cost_by_year": get_material_cost_by_year,
     "compare_price_per_unit_by_quarters": compare_price_per_unit_by_quarters,
-    "excel_test": excel_test,
     "get_material_amount_sold": get_material_amount_sold,
     "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency,
     "get_total_sales_per_months_for_country_for_year_for_material_in_currency": get_total_sales_per_months_for_country_for_year_for_material_in_currency,
@@ -338,6 +348,7 @@ tools_map = {
     "convert_column_to_currency_and_add_to_file": convert_column_to_currency_and_add_to_file,
     "convert_column_to_price_per_unit_and_add_file": convert_column_to_price_per_unit_and_add_file,
     "get_excel_formula": get_excel_formula,
+    "change_supplier_name_in_files": change_supplier_name_in_files,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
