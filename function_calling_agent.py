@@ -255,6 +255,11 @@ tool_descriptions = [
                     "type": "string",
                     "description": "What metric to plot. Available options: sales, units, both. Default value: sales.",
                 },
+                {
+                    "name": "plot_type",
+                    "type": "string",
+                    "description": "The type of plot to generate. Available options: line, bar. Default value: line.",
+                }
             ],
         },
         
