@@ -77,6 +77,8 @@ class OpenAIWrapper:
 
     def __call__(self, history: list):
         try:
+            print(f"HHHHHHHHH{history}")
+            print(f"HHHHHHHHHhhhhhhhhhhhhhhhhhhhhhhhhh")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=history,

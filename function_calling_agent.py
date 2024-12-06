@@ -11,6 +11,7 @@ from functions import (
     plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
     convert_column_to_currency_and_add_to_file,
     convert_column_to_price_per_unit_and_add_file,
+    get_excel_formula,
 )
 from utils import answer_to_json
 import traceback
@@ -299,6 +300,29 @@ tool_descriptions = [
             ]
         }
     },
+    {
+        "function": {
+            "name": "get_excel_formula",
+            "description": "Get the Excel formula for a specific question.",
+            "parameters": [
+                {
+                    "name": "country_code",
+                    "type": "string",
+                    "description": "The country code. Available options: CH, DE, FR, US, ES, global. Default value: global.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to search for.",
+                },
+                {
+                    "name": "question",
+                    "type": "string",
+                    "description": "The question to search for as a formulated sentence.",
+                },
+            ],
+        },
+    }
 ]
 
 tools_map = {
@@ -313,6 +337,7 @@ tools_map = {
     "plot_total_sales_per_months_for_country_for_year_for_material_in_currency": plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
     "convert_column_to_currency_and_add_to_file": convert_column_to_currency_and_add_to_file,
     "convert_column_to_price_per_unit_and_add_file": convert_column_to_price_per_unit_and_add_file,
+    "get_excel_formula": get_excel_formula,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.

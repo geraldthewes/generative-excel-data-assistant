@@ -602,3 +602,41 @@ def convert_column_to_price_per_unit_and_add_file(model, year: int, country_code
 
         return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
 
+'''
+Files: all
+Example prompt: Give me an excel formula with which I can calculate the price per unit in the Sales data for the US in 2022. 
+'''
+def get_excel_formula(model, country_code: str, year: int, question: str) -> str:
+    files, metadata, data_frames = get_data(model)
+    print(f"files: {files}")
+
+    if not data_frames:
+        return "No data available"
+    else:
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            return mt[MetadataType.COUNTRY_CODE] == country_code and str(mt[MetadataType.YEAR_FROM]) == str(year)
+        
+    files = list(filter(metadata_filter, files))
+    print(f"fffffffffiles: {files}")
+
+    if len(files) == 0:
+        return "No data source available."
+    
+    if len(files) > 1:
+        return "Too many data sources available: " + ", ".join(files)
+
+    df = pd.read_excel(f"tmp/{files[0]}")
+    print(f"df: {df}")
+
+    prompt = f"""As an AI assistant, please provide the Excel formula for the following question:
+        {question}
+        
+        based on this data:
+        {df.to_string()}
+        """
+
+    answer = ""
+    for x in model([{"role": "user", "content": prompt}]):
+        answer += x
+    return answer    

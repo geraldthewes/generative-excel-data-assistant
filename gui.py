@@ -31,7 +31,6 @@ def cleanup():
     os.mkdir(tmp_folder)
 
 def handle_file_upload(files):
-    print(files)
     for file in files:
         src_path = file.name
         dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
