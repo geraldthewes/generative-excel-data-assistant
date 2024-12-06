@@ -9,6 +9,9 @@ from functions import (
     get_material_sales_per_country_in_currency,
     get_total_sales_per_months_for_country_for_year_for_material_in_currency,
     plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
+    convert_column_to_currency_and_add_to_file,
+    convert_column_to_price_per_unit_and_add_file,
+    get_excel_formula,
 )
 from utils import answer_to_json
 import traceback
@@ -131,24 +134,24 @@ tool_descriptions = [
                 {
                     "name": "month_from",
                     "type": "int",
-                    "description": "The start month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default: 1",
+                    "description": "The start month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default value: 1",
                 },
                 {
                     "name": "month_to",
                     "type": "int",
-                    "description": "The end month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default: 12",
+                    "description": "The end month of sales. Available values: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12. Default value: 12",
                 },
                 {
-                    "name": "country",
+                    "name": "country_code",
                     "type": "string",
-                    "description": "The country. Available options: CH, DE, FR, US, ES, global. Default: global.",
+                    "description": "The country code. Available options: CH, DE, FR, US, ES, global. Default value: global.",
                 },
             ],
         },
     },
     {
         "function": {
-            "name": "get_material_sales_per_country",
+            "name": "get_material_sales_per_country_in_currency",
             "description": "Get the sales of a material of a specific country of a year in a specific currency in one call. This function cannot be used to get the sales grouped by month, as it only summarizes the data by the given specific year.",
             "parameters": [
                 {
@@ -167,9 +170,9 @@ tool_descriptions = [
                     "description": "The currency. Available options: CHF, USD, EUR",
                 },
                 {
-                    "name": "country",
+                    "name": "country_code",
                     "type": "string",
-                    "description": "The country. Available options: CH, DE, FR, US, ES, global. Default: global.",
+                    "description": "The country code. Available options: CH, DE, FR, US, ES, global. Default value: global.",
                 },
             ],
         },
@@ -180,9 +183,9 @@ tool_descriptions = [
             "description": "Get the total sales for a specific country grouped by months (for each month) for one specific year in one specific country, occasionally for one specific material. It groups the sales by month and returns the total sales for each month, but only for a specific country. It will return the sales in the wished currency, if specified. This function cannot get data for multiple countries in one call.",
             "parameters": [
                 {
-                    "name": "country",
+                    "name": "country_code",
                     "type": "string",
-                    "description": "The country to get the evolution of sales for.",
+                    "description": "The country code to get the evolution of sales for. Available options: CH, DE, FR, US, ES, global. Default value: global.",
                 },
                 {
                     "name": "year",
@@ -207,7 +210,7 @@ tool_descriptions = [
                 {
                     "name": "to_currency",
                     "type": "string",
-                    "description": "The currency to get the evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
+                    "description": "The currency to get the evolution of sales for. Available options: CHF, USD, EUR. Default value: USD.",
                 },
             ],
         },
@@ -218,9 +221,9 @@ tool_descriptions = [
             "description": "Plot a graph or chart diagram of the total sales for a specific country grouped by months (for each month) for one specific year in one specific country, occasionally for one specific material. It groups the sales by month and returns the total sales for each month, but only for a specific country. It will return a plot graphic with the sales in the wished currency, if specified. This function cannot get data for multiple countries in one call.",
             "parameters": [
                 {
-                    "name": "country",
+                    "name": "country_code",
                     "type": "string",
-                    "description": "The country to plot the evolution of sales for.",
+                    "description": "The country to plot the evolution of sales for. Available options: CH, DE, FR, US, ES, global. Default value: global.",
                 },
                 {
                     "name": "year",
@@ -245,16 +248,81 @@ tool_descriptions = [
                 {
                     "name": "to_currency",
                     "type": "string",
-                    "description": "The currency to get plot evolution of sales for. Available options: CHF, USD, EUR. DEFAULT: USD.",
+                    "description": "The currency to get plot evolution of sales for. Available options: CHF, USD, EUR. Default value: USD.",
                 },
                 {
                     "name": "to_plot",
                     "type": "string",
-                    "description": "What metric to plot. Available options: sales, units, both. DEFAULT: sales.",
+                    "description": "What metric to plot. Available options: sales, units, both. Default value: sales.",
                 },
             ],
         },
+        
     },
+    {
+        "function": {
+            "name": "convert_column_to_currency_and_add_to_file",
+            "description": "Convert a column to a specific currency and add it as an extra column in the respective file. The target file is being identified by a country code and a year.",
+            "parameters": [
+                {
+                    "name": "currency_code",
+                    "type": "string",
+                    "description": "The currency code to convert the values to. Available options: CHF, USD, EUR. Default value: USD.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year.",
+                },
+                {
+                    "name": "country_code",
+                    "type": "string",
+                    "description": "The country code for which the data has been recorded. Available options: CH, DE, FR, US, ES, global. Default value: global.",
+                },
+            ]
+        }
+    },
+    {
+        "function": {
+            "name": "convert_column_to_price_per_unit_and_add_file",
+            "description": "Convert a column to price per unit and add it as an extra column in the respective file. The target file is being identified by a country code and a year.",
+            "parameters": [
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year.",
+                },
+                {
+                    "name": "country_code",
+                    "type": "string",
+                    "description": "The country code for which the data has been recorded. Available options: CH, DE, FR, US, ES, global. Default value: global.",
+                },
+            ]
+        }
+    },
+    {
+        "function": {
+            "name": "get_excel_formula",
+            "description": "Get the Excel formula for a specific question.",
+            "parameters": [
+                {
+                    "name": "country_code",
+                    "type": "string",
+                    "description": "The country code. Available options: CH, DE, FR, US, ES, global. Default value: global.",
+                },
+                {
+                    "name": "year",
+                    "type": "int",
+                    "description": "The year to search for.",
+                },
+                {
+                    "name": "question",
+                    "type": "string",
+                    "description": "The question to search for as a formulated sentence.",
+                },
+            ],
+        },
+    }
 ]
 
 tools_map = {
@@ -267,6 +335,9 @@ tools_map = {
     "get_material_sales_per_country_in_currency": get_material_sales_per_country_in_currency,
     "get_total_sales_per_months_for_country_for_year_for_material_in_currency": get_total_sales_per_months_for_country_for_year_for_material_in_currency,
     "plot_total_sales_per_months_for_country_for_year_for_material_in_currency": plot_total_sales_per_months_for_country_for_year_for_material_in_currency,
+    "convert_column_to_currency_and_add_to_file": convert_column_to_currency_and_add_to_file,
+    "convert_column_to_price_per_unit_and_add_file": convert_column_to_price_per_unit_and_add_file,
+    "get_excel_formula": get_excel_formula,
 }
 
 function_calling_prompt = """As an AI assistant, please select the most suitable function and parameters from the list of available functions below, based on the user's input.
@@ -310,6 +381,9 @@ class FunctionAgent:
                 )
                 + prompt_end
             )
+            # debug:
+            # with open("prompt.json", "w") as f:
+            #     f.write(prompt)
             answer = ""
             for x in self.model([{"role": "user", "content": prompt}]):
                 answer += x

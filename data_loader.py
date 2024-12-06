@@ -43,7 +43,7 @@ def load_metadata_cache():
     metadata = {}
     cache_files = os.listdir('tmp')
     for filename in cache_files:
-        if filename.endswith('.json'):
+        if filename.endswith('.json') and not filename.startswith("file_mapping"):
             parts = filename.split('_', 1)
             if len(parts) != 2 or not re.match('^\d{4}-\d{2}-\d{2}$', parts[0]):
                 print(f"Invalid cache file: {filename}")
@@ -109,7 +109,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
             answer += x
 
         answer_dict = answer_to_json(answer)
-        answer_dict["columns"] = {v.lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
+        answer_dict["columns"] = {str(v).lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
         metadata[filename] = answer_dict
 
         answer_dict["cachesum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()
