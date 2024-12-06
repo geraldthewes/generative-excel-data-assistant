@@ -206,16 +206,6 @@ def compare_price_per_unit_by_quarters(model, unit_type: str, quarter1: str, yea
         return f"Average price per unit in {quarter1} {year1}: {avg_q1}\nAverage price per unit in {quarter2} {year2}: {avg_q2}"
 
 
-def excel_test():    
-    workbook = xlsxwriter.Workbook('tmp/hello.xlsx')
-    worksheet = workbook.add_worksheet()
-
-    worksheet.write('A1', 'Hello world')
-
-    workbook.close()
-
-    return "tmp/hello.xlsx"
-
 '''
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: How many units of wood have been sold in the first three months of 2023?
@@ -541,7 +531,7 @@ def convert_column_to_currency_and_add_to_file(model, currency_code: str, year: 
         df.to_excel(writer, sheet_name="Sales Data", index=False)
         writer.close()
 
-        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
+        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Download here</a> or download it below in the “File” section.'
 
 
 '''
@@ -600,7 +590,50 @@ def convert_column_to_price_per_unit_and_add_file(model, year: int, country_code
         df.to_excel(writer, sheet_name="Sales Data", index=False)
         writer.close()
 
-        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Downloade here</a> or download it below in the “File” section.'
+        return f'A column has been added to the file. <a href="gradio_api/file={file_path}">Download here</a> or download it below in the “File” section.'
+
+'''
+Files: Material Cost_global_2023.xlsx
+Example prompt: Change the supplier name from "Material Masters Co." to "GenAI for the win"
+'''
+def change_supplier_name_in_files(model, supplier_name_from: str, supplier_name_to) -> str:
+    files, metadata, data_frames = get_data(model)
+
+    if not data_frames:
+        return "No data available"
+    else:
+        def metadata_filter(filename):
+            mt = metadata[filename]
+            columns = mt["columns"].keys()
+            return "supplier" in columns
+        
+        files = list(filter(metadata_filter, files))
+
+        if len(files) == 0:
+            return "No data source available."
+        
+        download_links = ""
+        for file in files:
+            df = data_frames[file]
+            mt = metadata[file]
+            columns = mt["columns"]
+
+            supplier_col = columns["supplier"]
+            df[supplier_col] = df[supplier_col].replace(supplier_name_from, supplier_name_to)
+
+            with open('tmp/file_mapping.json', 'r') as f:
+                file_mapping = json.load(f)
+
+            file_path = file_mapping.get(file)
+            if not file_path:
+                return f"File path for {file} not found in file_mapping.json."
+
+            writer = pd.ExcelWriter(file_path, engine="xlsxwriter")
+            df.to_excel(writer, sheet_name="Sales Data", index=False)
+            writer.close()
+            download_links += f'<li><a href="gradio_api/file={file_path}">Download {file}</a><br></li>'
+
+        return f'Supplier name "{supplier_name_from}" has been changed to "{supplier_name_to}" all files. Download them here: <br><ul>{download_links}</ul>'
 
 '''
 Files: all
