@@ -2,6 +2,7 @@
 # don't forget to set .env variables
 openai
 XlsxWriter
+openpyxl
 pandas
 openai
 gradio
