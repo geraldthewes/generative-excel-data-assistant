@@ -47,7 +47,7 @@ def handle_file_upload(files):
         with open(json_path, "w") as json_file:
             json.dump(file_mapping, json_file)
 
-with gr.Blocks(theme=gr.themes.Ocean()) as demo:
+with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
     msg: gr.Textbox = gr.Textbox()
@@ -82,7 +82,7 @@ with gr.Blocks(theme=gr.themes.Ocean()) as demo:
         handle_file_upload, inputs=file_upload, outputs=None)
 
 def main_gui() -> None:
-    demo.launch()
+    demo.launch(favicon_path="./favicon.png")
 
 if __name__ == "__main__":
     try:
