@@ -55,7 +55,7 @@ def handle_file_upload(files):
 
 with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
-    chatbot: gr.Chatbot = gr.Chatbot(type="messages")
+    chatbot: gr.Chatbot = gr.Chatbot(type="messages", height="65vh")
     msg: gr.Textbox = gr.Textbox()
     send_button: gr.Button = gr.Button("Send", variant="primary")
     file_upload: gr.File = gr.File(file_types=[".xls", ".xlsx"], file_count="multiple")
