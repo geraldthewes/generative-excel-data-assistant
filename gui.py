@@ -53,7 +53,7 @@ def handle_file_upload(files):
     data_frames, info_texts = excel_preparation.read_excel(tmp_files)
     extract_metadata(llm, tmp_files, data_frames, info_texts)
 
-with gr.Blocks(theme=gr.themes.Ocean()) as demo:
+with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
     msg: gr.Textbox = gr.Textbox()
