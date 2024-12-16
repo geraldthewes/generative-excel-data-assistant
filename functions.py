@@ -194,7 +194,7 @@ def compare_price_per_unit_by_quarters(model, unit_type: str, quarter1: str, yea
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: How many units of wood have been sold in the first three months of 2023?
 '''
-def get_material_amount_sold(model, material, year: int, month_from: int, month_to: int, country: str) -> str:
+def get_material_amount_sold(model, material, year: int, month_from: int, month_to: int, country_code: str) -> str:
     if not year or not month_from or not month_to:
         return "Please provide a year and a month."
     
@@ -205,7 +205,7 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
     else:
         def metadata_filter(filename):
             mt = metadata[filename]
-            countries_no_match = country != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country
+            countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
             if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
                 return False
 
