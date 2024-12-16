@@ -92,7 +92,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
         info_text = info_texts[filename]
 
         if filename in cached_metadata:
-            if cached_metadata[filename]["cachesum"] == hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest():
+            if cached_metadata[filename]["checksum"] == hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest():
                 metadata[filename] = cached_metadata[filename]
                 continue
             else:
@@ -114,7 +114,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
         answer_dict["columns"] = {str(v).lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
         metadata[filename] = answer_dict
 
-        answer_dict["cachesum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()
+        answer_dict["checksum"] = hashlib.md5(open(f'tmp/{filename}','rb').read()).hexdigest()
         with open(f"tmp/{curr_date}_{filename}.json", "w") as f:
             json.dump(answer_dict, f)
 

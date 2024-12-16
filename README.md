@@ -57,7 +57,7 @@ TODO: Add supported prompts and examples from Teams Loop component. Add screensh
 <!-- How the backend works, how the language model is used, etc. -->
 
 ### Our Solution
-Once a command is issued by the user, GEDA starts inspecting the uploaded files and creates dataframes from them. `excel_preparations.py` detects the header row to ensure accurate data extraction. The optional information that sometimes appears above the header row (title and description) is saved into an `info_text` array. Based on the file name, the header row (column names), and the rows above the header row (optional title and description), GEDA asks an LLM to analyze what the files contain and generate a `metadata` dictionary for each file, which may take some time. GEDA caches the metadata dictionary to save time in the future (because it's so smart). 
+Once a query is issued by the user, GEDA starts inspecting the uploaded files and creates Panda dataframes from them. Then GEDA detects the header row to ensure accurate data extraction. The optional information that sometimes appears above the header row (title and description) is saved into an `info_text` array. Based on the file name, the header row (column names), and the rows above the header row (optional title and description), GEDA asks an LLM to analyze what the files contain and generate a `metadata` dictionary for each file, which may take some time. For time-saving purposes, GEDA caches the metadata dictionary in JSON format to save time in the future. The cached data is cleared upon restarting GEDA.
 
 The metadata dictionary contains the following information:
 - `type`: The type of data in the file (e.g., sales, inventory).
@@ -65,11 +65,11 @@ The metadata dictionary contains the following information:
 - `year_from`: The starting year of the data.
 - `year_to`: The ending year of the data.
 - `columns`: A dictionary mapping standardized column names to their individual column names in the corresponding files.
-- `cachesum`: A checksum for integrity. TODO: Correct?
+- `checksum`: A checksum to detect changes. If the checksum changed, the metadata is updated.
 
 An example of a metadata dictionary is shown below:
 ```json
-{"type": "sales", "country_code": "US", "year_from": "2020", "year_to": "2020", "columns": {"month": "Month", "material": "Material", "units_sold": "Units Sold", "total_sales_dollar": "Total Sales ($)"}, "cachesum": "2ba12fb840b469a0ca71bc6c9aed061f"}
+{"type": "sales", "country_code": "US", "year_from": "2020", "year_to": "2020", "columns": {"month": "Month", "material": "Material", "units_sold": "Units Sold", "total_sales_dollar": "Total Sales ($)"}, "checksum": "2ba12fb840b469a0ca71bc6c9aed061f"}
 ```
 
 Next, GEDA will use an LLM to understand the user's query and map it to a predefinde function, using the function descriptions in `function_calling_agent.py`.
