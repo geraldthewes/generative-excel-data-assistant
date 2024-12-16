@@ -25,7 +25,7 @@ class ExcelPreparations:
             
             df = pd.read_excel(file_path, header=header_row)
             df.columns = df.columns.str.strip() # remove leading and trailing whitespaces
-            # df.columns = df.columns.str.replace("Unnamed.*", "Material", regex=True)
+            df.columns = df.columns.str.replace("Unnamed.*", "Material", regex=True)
             if header_col > 0:
                 df = df.drop(df.columns[:header_col], axis=1)
             data_frames[file] = df
