@@ -246,12 +246,10 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: List the sales of wood in 2023 in Swiss Francs
 '''
-def get_material_sales_per_country_in_currency(model, material: str, year: int, to_currency: str, country: str) -> str:
+def get_material_sales_per_country_in_currency(model, material: str, year: int = 2023, to_currency: str = "USD", country_code: str = "global") -> str:
     allowed_currencies = ["USD", "CHF", "EUR"]
     if to_currency not in allowed_currencies:
         return "Only " + ", ".join(allowed_currencies) + " are allowed"
-    
-    year = int(year)
 
     files, metadata, data_frames = get_data(model)
     
@@ -260,14 +258,23 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
     else:
         def metadata_filter(filename):
             mt = metadata[filename]
-            countries_no_match = country != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country
-            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
+            countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
+            if countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
             return ColumnType.MATERIAL in columns and (ColumnType.UNITS_SOLD in columns)
         
         files = list(filter(metadata_filter, files))
+
+        def year_filter(filename):
+            mt = metadata[filename]
+            year_from = int(mt["year_from"])
+            year_to = int(mt["year_to"]) or (year_from + 1)  # +1 because year_to is exclusive
+            year_range = range(year_from, year_to + (1 if year_to == year_from else 0))
+            return year in year_range
+
+        files = list(filter(year_filter, files))
 
         if len(files) == 0:
             return "No data source available."
@@ -299,7 +306,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         if not number_of_sold_units_txt:
             return f"No sales found for {material} in {year}."
 
-        number_of_sold_units_txt = f"Amount of {material} sold in {year} ({country}):\n" + number_of_sold_units_txt
+        number_of_sold_units_txt = f"Sales of {material} in {year}:\n" + number_of_sold_units_txt
         return number_of_sold_units_txt   
     
 def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country_code: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
