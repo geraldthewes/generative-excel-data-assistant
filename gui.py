@@ -30,29 +30,6 @@ def cleanup():
         shutil.rmtree(tmp_folder)
     os.mkdir(tmp_folder)
 
-def handle_file_upload(files):
-    tmp_files = []
-    for file in files:
-        src_path = file.name
-        dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
-        
-        # Check if source and destination are the same
-        if os.path.abspath(src_path) != os.path.abspath(dst_path):
-            shutil.copy(src_path, dst_path)
-        tmp_files.append(dst_path.split("/")[-1])
-
-        # Create a dictionary to map filename to its path
-        file_mapping = {os.path.basename(file.name): file for file in files}
-
-        # Save the dictionary as a JSON file in the tmp folder
-        json_path = os.path.join(tmp_folder, "file_mapping.json")
-        with open(json_path, "w") as json_file:
-            json.dump(file_mapping, json_file)
-
-    excel_preparation = ExcelPreparations()
-    data_frames, info_texts = excel_preparation.read_excel(tmp_files)
-    extract_metadata(llm, tmp_files, data_frames, info_texts)
-
 with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages")
@@ -60,6 +37,32 @@ with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     send_button: gr.Button = gr.Button("Send", variant="primary")
     file_upload: gr.File = gr.File(file_types=[".xls", ".xlsx"], file_count="multiple")
     clear: gr.Button = gr.Button("Clear Chat")
+
+    def handle_file_upload(files):
+        yield gr.update(interactive = False), gr.update(interactive = False)
+        tmp_files = []
+        for file in files:
+            src_path = file.name
+            dst_path = os.path.join(tmp_folder, os.path.basename(file.name))
+            
+            # Check if source and destination are the same
+            if os.path.abspath(src_path) != os.path.abspath(dst_path):
+                shutil.copy(src_path, dst_path)
+            tmp_files.append(dst_path.split("/")[-1])
+
+            # Create a dictionary to map filename to its path
+            file_mapping = {os.path.basename(file.name): file for file in files}
+
+            # Save the dictionary as a JSON file in the tmp folder
+            json_path = os.path.join(tmp_folder, "file_mapping.json")
+            with open(json_path, "w") as json_file:
+                json.dump(file_mapping, json_file)
+
+        excel_preparation = ExcelPreparations()
+        data_frames, info_texts = excel_preparation.read_excel(tmp_files)
+        extract_metadata(llm, tmp_files, data_frames, info_texts)
+        yield gr.update(interactive = False), gr.update(interactive = False)
+        
 
     def user(
         user_message: str, history: List[Dict[str, Any]]
@@ -85,7 +88,7 @@ with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
     clear.click(lambda: None, None, chatbot, queue=False)
 
     file_upload.upload(
-        handle_file_upload, inputs=file_upload, outputs=None)
+        handle_file_upload, inputs=[file_upload], outputs=[send_button, msg])
 
 def main_gui() -> None:
     demo.launch(favicon_path="./favicon.png")
