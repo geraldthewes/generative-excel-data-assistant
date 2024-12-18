@@ -54,11 +54,11 @@ def get_suppliers_by_material(model, material: str) -> str:
             result = df[filtered_rows == material.lower()]
         
             if result.shape[0] > 0:
-                suppliers += ", ".join(result["Supplier"].to_list())
+                suppliers += " - In file '" + file + "': " + ", ".join(result["Supplier"].to_list()) + "\n"
 
         if not suppliers:
             return f"No suppliers found. It might be that no relavant excel file was uploaded, or the material '{material}' was not found."
-        return suppliers
+        return "Found these suppliers of " + material + ":\n" + suppliers
 
 '''
 Using for example "Material Inventory_US_2023.xlsx", this function returns the suppliers of a given material in a given year.
@@ -86,11 +86,11 @@ def get_suppliers_by_material_and_year(model, material: str, year: int) -> str:
             result = df[filtered_rows == material.lower()]
         
             if result.shape[0] > 0:
-                suppliers += ", ".join(result["Supplier"].to_list())
+                suppliers += " - In file '" + file + "': " + ", ".join(result["Supplier"].to_list())
 
         if not suppliers:
             return f"No suppliers found. It might be that no relevant excel file was uploaded, or the material '{material}' was not found."
-        return suppliers
+        return "Found these suppliers of " + material + " in " + str(year) + ":\n" + suppliers
 
 '''
 Using for example "Material Cost_global_2018-2022.xlsx", this function returns the price of a material in a given year and the file it was found in.
@@ -258,7 +258,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         def metadata_filter(filename):
             mt = metadata[filename]
             countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
-            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
+            if countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
