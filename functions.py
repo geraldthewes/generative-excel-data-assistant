@@ -256,7 +256,7 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
 
 '''
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
-Example prompt: List the sales of wood in 2023 in Swiss Francs
+Example prompt: List the sales of wood in 2023 in Swiss Francs globally.
 '''
 def get_material_sales_per_country_in_currency(model, material: str, year: int, to_currency: str, country_code: str) -> str:
     allowed_currencies = ["USD", "CHF", "EUR"]
@@ -281,10 +281,13 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
 
         def year_filter(filename):
             mt = metadata[filename]
-            year_from = int(mt["year_from"])
-            year_to = int(mt["year_to"]) or (year_from + 1)  # +1 because year_to is exclusive
-            year_range = range(year_from, year_to + (1 if year_to == year_from else 0))
-            return year in year_range
+            try:
+                year_from = int(mt[MetadataType.YEAR_FROM])
+                year_to = int(mt[MetadataType.YEAR_TO])
+                year_range = range(year_from, year_to + 1) # +1 because year_to is exclusive
+                return year in year_range
+            except:
+                return False # if year_from or year_to is "unknown"
 
         files = list(filter(year_filter, files))
 
