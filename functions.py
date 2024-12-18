@@ -203,20 +203,19 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
     if not data_frames:
         return "No data available"
     else:
+        year = int(year)
+        month_from = int(month_from)
+        month_to = int(month_to)
         def metadata_filter(filename):
             mt = metadata[filename]
             countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
-            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
+            if mt[MetadataType.YEAR_FROM] != int(year) or countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
             return ColumnType.MATERIAL in columns and ColumnType.UNITS_SOLD in columns
         
         files = list(filter(metadata_filter, files))
-
-        year = int(year)
-        month_from = int(month_from)
-        month_to = int(month_to)
 
         if len(files) == 0:
             return "No data source available."
@@ -246,7 +245,7 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
 Example prompt: List the sales of wood in 2023 in Swiss Francs
 '''
-def get_material_sales_per_country_in_currency(model, material: str, year: int = 2023, to_currency: str = "USD", country_code: str = "global") -> str:
+def get_material_sales_per_country_in_currency(model, material: str, year: int, to_currency: str, country_code: str) -> str:
     allowed_currencies = ["USD", "CHF", "EUR"]
     if to_currency not in allowed_currencies:
         return "Only " + ", ".join(allowed_currencies) + " are allowed"
@@ -259,7 +258,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int =
         def metadata_filter(filename):
             mt = metadata[filename]
             countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
-            if countries_no_match:
+            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
@@ -306,7 +305,8 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int =
         if not number_of_sold_units_txt:
             return f"No sales found for {material} in {year}."
 
-        number_of_sold_units_txt = f"Sales of {material} in {year}:\n" + number_of_sold_units_txt
+        cnt_str = "globally" if country_code == "global" else ("in " + country_code_to_name(country_code))
+        number_of_sold_units_txt = f"Amount of {material} sold in {year} {cnt_str}:\n" + number_of_sold_units_txt
         return number_of_sold_units_txt   
     
 def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country_code: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
@@ -400,7 +400,7 @@ Example prompt: Return the total Sales of Switzerland for each month in 2023.
 '''
 def get_total_sales_per_months_for_country_for_year_for_material_in_currency(
     model,
-    country: str,
+    country_code: str,
     material=None,
     year: int = 2023,
     month_from: int = 1,
@@ -408,11 +408,11 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency(
     to_currency="USD",
 ) -> str:
     grouped_df = get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(
-        model, country, material, year, month_from, month_to, to_currency
+        model, country_code, material, year, month_from, month_to, to_currency
     )
 
     material_info = f" for {material}" if material else ""
-    result = f"Total amount of units sold and total sales {material_info} in {country_code_to_name(country)} from {calendar.month_name[int(month_from)]} to {calendar.month_name[int(month_to)]} {year}:\n"
+    result = f"Total amount of units sold and total sales {material_info} in {country_code_to_name(country_code)} from {calendar.month_name[int(month_from)]} to {calendar.month_name[int(month_to)]} {year}:\n"
     result += f"<pre>{grouped_df.to_string(index=False)}</pre>"
 
     return result
