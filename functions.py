@@ -65,17 +65,31 @@ Example prompt: Get suppliers of wood in 2023.
 '''
 def get_suppliers_by_material_and_year(model, material: str, year: int) -> str:
     files, metadata, data_frames = get_data(model)
+
+    year = int(year)
     
     if not data_frames:
         return "No data available"
     else:
         # use only files with material, supplier columns and matching year
-        def metadata_filter(filename):
+        def column_filter(filename):
             mt = metadata[filename]
             columns = mt["columns"].keys()
-            return "material" in columns and "supplier" in columns and int(mt[MetadataType.YEAR_FROM]) == int(year) and int(mt[MetadataType.YEAR_TO]) == int(year)
+            return "material" in columns and "supplier" in columns
         
-        files = list(filter(metadata_filter, files))
+        files = list(filter(column_filter, files))
+
+        def year_filter(filename):
+            mt = metadata[filename]
+            try:
+                year_from = int(mt[MetadataType.YEAR_FROM])
+                year_to = int(mt[MetadataType.YEAR_TO])
+                year_range = range(year_from, year_to + 1) # +1 because year_to is exclusive
+                return year in year_range
+            except:
+                return False # if year_from or year_to is "unknown"
+
+        files = list(filter(year_filter, files))
 
         suppliers = ""
         for file in files:
@@ -85,7 +99,7 @@ def get_suppliers_by_material_and_year(model, material: str, year: int) -> str:
             result = df[filtered_rows == material.lower()]
         
             if result.shape[0] > 0:
-                suppliers += " - In file '" + file + "': " + ", ".join(result["Supplier"].to_list())
+                suppliers += " - In file '" + file + "': " + ", ".join(result["Supplier"].to_list()) + "\n"
 
         if not suppliers:
             return f"No suppliers found. It might be that no relevant excel file was uploaded, or the material '{material}' was not found."
@@ -242,7 +256,7 @@ def get_material_amount_sold(model, material, year: int, month_from: int, month_
 
 '''
 Files: "Sales data_CH_2023.xlsx", "Sales data_D_2023.xlsx", etc
-Example prompt: List the sales of wood in 2023 in Swiss Francs
+Example prompt: List the sales of wood in 2023 in Swiss Francs globally.
 '''
 def get_material_sales_per_country_in_currency(model, material: str, year: int, to_currency: str, country_code: str) -> str:
     allowed_currencies = ["USD", "CHF", "EUR"]
@@ -267,10 +281,13 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
 
         def year_filter(filename):
             mt = metadata[filename]
-            year_from = int(mt["year_from"])
-            year_to = int(mt["year_to"]) or (year_from + 1)  # +1 because year_to is exclusive
-            year_range = range(year_from, year_to + (1 if year_to == year_from else 0))
-            return year in year_range
+            try:
+                year_from = int(mt[MetadataType.YEAR_FROM])
+                year_to = int(mt[MetadataType.YEAR_TO])
+                year_range = range(year_from, year_to + 1) # +1 because year_to is exclusive
+                return year in year_range
+            except:
+                return False # if year_from or year_to is "unknown"
 
         files = list(filter(year_filter, files))
 
