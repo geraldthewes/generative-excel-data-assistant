@@ -49,8 +49,7 @@ def get_suppliers_by_material(model, material: str) -> str:
         suppliers = ""
         for file in files:
             df = data_frames[file]
-
-            filtered_rows = data_frames[files[0]]["Material"].str.lower()
+            filtered_rows = data_frames[file]["Material"].str.lower()
             result = df[filtered_rows == material.lower()]
         
             if result.shape[0] > 0:
