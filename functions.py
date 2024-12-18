@@ -258,7 +258,7 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         def metadata_filter(filename):
             mt = metadata[filename]
             countries_no_match = country_code != "global" and mt[MetadataType.COUNTRY_CODE] != "global" and mt[MetadataType.COUNTRY_CODE] != country_code
-            if mt[MetadataType.YEAR_FROM] != year or countries_no_match:
+            if countries_no_match:
                 return False
 
             columns = mt["columns"].keys()
