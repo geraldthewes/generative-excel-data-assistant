@@ -112,8 +112,9 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
 
         answer_dict = answer_to_json(answer)
         answer_dict["columns"] = {str(v).lower(): k for k, v in answer_dict["columns"].items()} # swap keys and values
-        answer_dict["year_from"] = int(answer_dict["year_from"])
-        answer_dict["year_to"] = int(answer_dict["year_to"])
+        if answer_dict["year_from"].isdigit() and answer_dict["year_to"].isdigit(): # can be "unknown"
+            answer_dict["year_from"] = int(answer_dict["year_from"])
+            answer_dict["year_to"] = int(answer_dict["year_to"])
 
         metadata[filename] = answer_dict
 
