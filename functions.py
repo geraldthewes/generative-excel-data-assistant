@@ -326,6 +326,8 @@ def get_material_sales_per_country_in_currency(model, material: str, year: int, 
         return number_of_sold_units_txt   
     
 def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dataframe(model, country_code: str, material=None, year: int=2023, month_from: int=1, month_to: int=12, to_currency="USD"):
+    if not to_currency:
+        to_currency = "USD"
     month_from = int(month_from)
     month_to = int(month_to)
     year = int(year)
@@ -352,10 +354,13 @@ def get_total_sales_per_months_for_country_for_year_for_material_in_currency_dat
 
     def year_filter(filename):
         mt = metadata[filename]
-        year_from = int(mt["year_from"])
-        year_to = int(mt["year_to"]) or (year_from + 1)  # +1 because year_to is exclusive
-        year_range = range(year_from, year_to + (1 if year_to == year_from else 0))
-        return year in year_range
+        try:
+            year_from = int(mt[MetadataType.YEAR_FROM])
+            year_to = int(mt[MetadataType.YEAR_TO])
+            year_range = range(year_from, year_to + 1) # +1 because year_to is exclusive
+            return year in year_range
+        except:
+            return False # if year_from or year_to is "unknown"
 
     files = list(filter(year_filter, files))
 
