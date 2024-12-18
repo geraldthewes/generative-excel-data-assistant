@@ -61,7 +61,7 @@ with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
         excel_preparation = ExcelPreparations()
         data_frames, info_texts = excel_preparation.read_excel(tmp_files)
         extract_metadata(llm, tmp_files, data_frames, info_texts)
-        yield gr.update(interactive = False), gr.update(interactive = False)
+        yield gr.update(interactive = True), gr.update(interactive = True)
         
 
     def user(
