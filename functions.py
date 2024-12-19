@@ -119,9 +119,21 @@ def get_material_cost_by_year(model, material: str, year: int) -> str:
         def metadata_filter(filename):
             mt = metadata[filename]
             columns = mt["columns"].keys()
-            return "material" in columns and "cost_per_unit_dollar" in columns and int(mt[MetadataType.YEAR_FROM]) >= int(year) and int(mt[MetadataType.YEAR_TO]) <= int(year)
+            return "material" in columns and "cost_per_unit_dollar" in columns
     
         files = list(filter(metadata_filter, files))
+
+        def year_filter(filename):
+            mt = metadata[filename]
+            try:
+                year_from = int(mt[MetadataType.YEAR_FROM])
+                year_to = int(mt[MetadataType.YEAR_TO])
+                year_range = range(year_from, year_to + 1) # +1 because year_to is exclusive
+                return year in year_range
+            except:
+                return False # if year_from or year_to is "unknown"
+
+        files = list(filter(year_filter, files))
 
         if len(files) > 1:
             return "Too many data sources available: " + ", ".join(files)
