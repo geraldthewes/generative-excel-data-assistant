@@ -75,7 +75,7 @@ def extract_metadata(model, filenames: list, data_frames: dict, info_texts: dict
         {
             "type": "type of the data. Available options are: sales, inventory, costs_per_unit.",
             "country_code": "country code. Available options are: CH, DE, FR, US, ES, global.",
-            "year_from": "year_from",
+            "year_from": "The year the data starts from.",
             "year_to": "year_to", If the data is for a single year, year_from and year_to should be the same.
             "columns": "Map columns to available options. Example: {'Cost per Unit ($)': 'cost_per_unit_dollar', 'Lead Time (Days)': 'lead_time_days', ...}"
         }
