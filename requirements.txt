@@ -13,3 +13,4 @@ plotly
 sentence-transformers
 numpy
 faiss-cpu
+dotenv
