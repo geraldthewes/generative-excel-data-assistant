@@ -30,7 +30,8 @@ def cleanup():
         shutil.rmtree(tmp_folder)
     os.mkdir(tmp_folder)
 
-with gr.Blocks(theme=gr.themes.Ocean(), title="GEDA") as demo:
+with gr.Blocks(title="GEDA") as demo:
+    demo.theme = gr.themes.Ocean()
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
     chatbot: gr.Chatbot = gr.Chatbot(type="messages", height="65vh")
     msg: gr.Textbox = gr.Textbox()
