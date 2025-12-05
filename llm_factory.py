@@ -1,10 +1,9 @@
 import os
 import time
-from llmhub_client import LLMHub
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from dotenv import load_dotenv
 import ollama
-from openai import AzureOpenAI
+from openai import OpenAI, AzureOpenAI
 
 load_dotenv()
 
@@ -27,7 +26,6 @@ class LlmHubWrapper:
                 yield delta
         except Exception as e:
             yield str(e)
-
 
 class Phi3Wrapper:
     def __init__(self, model_name: str):
@@ -69,6 +67,25 @@ class OllamaWrapper:
 class OpenAIWrapper:
     def __init__(self, model_name: str = "gpt-4o-mini"):
         self.model = model_name
+        self.client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY", ""),
+            base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        )
+
+    def __call__(self, history: list):
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=history,
+                temperature=0.7,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise ValueError(f"OpenAI error: {str(e)}")
+
+class AzureOpenAIWrapper:
+    def __init__(self, model_name: str = "gpt-4o-mini"):
+        self.model = model_name
         self.client = AzureOpenAI(
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
             api_key=os.getenv("AZURE_OPENAI_API_KEY"),
@@ -84,7 +101,7 @@ class OpenAIWrapper:
             )
             return response.choices[0].message.content
         except Exception as e:
-            raise ValueError(f"OpenAI error: {str(e)}")
+            raise ValueError(f"Azure OpenAI error: {str(e)}")
 
 
 def llm_factory(model_name: str):
@@ -96,6 +113,8 @@ def llm_factory(model_name: str):
         return OllamaWrapper("llama3.2")
     elif model_name == "gpt-4o-mini":
         return OpenAIWrapper("gpt-4o-mini")
+    elif model_name == "azure-gpt-4o-mini":
+        return AzureOpenAIWrapper("gpt-4o-mini")
     else:
         raise ValueError(f"Model {model_name} not supported")
 

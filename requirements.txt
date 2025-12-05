@@ -9,7 +9,7 @@ gradio
 transformers>=4.46.1
 ollama
 plotly
-git+https://gitlab.ost.ch/generative-ai/student-space/llmhub-client.git
+#git+https://gitlab.ost.ch/generative-ai/student-space/llmhub-client.git
 sentence-transformers
 numpy
 faiss-cpu
