@@ -11,7 +11,7 @@ from excel_preparations import ExcelPreparations
 
 load_dotenv()
 
-llm = llm_factory(os.getenv("MODEL_NAME", ""))
+llm = llm_factory(os.getenv("MODEL_NAME", "phi3"))
 calling_agent = FunctionAgent(llm)
 
 # Define the tmp folder
@@ -33,7 +33,7 @@ def cleanup():
 with gr.Blocks(title="GEDA") as demo:
     demo.theme = gr.themes.Ocean()
     gr.HTML("<h1 style='text-align: center;'>GEDA</h1>")
-    chatbot: gr.Chatbot = gr.Chatbot(type="messages", height="65vh")
+    chatbot: gr.Chatbot = gr.Chatbot(height="65vh")
     msg: gr.Textbox = gr.Textbox()
     send_button: gr.Button = gr.Button("Send", variant="primary")
     file_upload: gr.File = gr.File(file_types=[".xls", ".xlsx"], file_count="multiple")
