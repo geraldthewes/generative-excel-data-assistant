@@ -7,26 +7,6 @@ from openai import OpenAI, AzureOpenAI
 
 load_dotenv()
 
-class LlmHubWrapper:
-    def __init__(self):
-        self.client = LLMHub(api_key=os.getenv("LLMHUB_API_KEY", ""))
-        self.model = self.client.get_models()[0]["model"]
-
-    def __call__(self, history: list):
-        try:
-            completion = self.client.chat.completions.create(
-                model=self.model,
-                messages=history,
-                temperature=0.7,
-                stream=True,
-            )
-            for chunk in completion:
-                delta = chunk.choices[0].delta.content
-                time.sleep(0.05)
-                yield delta
-        except Exception as e:
-            yield str(e)
-
 class Phi3Wrapper:
     def __init__(self, model_name: str):
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -105,14 +85,12 @@ class AzureOpenAIWrapper:
 
 
 def llm_factory(model_name: str):
-    if model_name == "llmhub":
-        return LlmHubWrapper()
-    elif model_name == "phi3":
+    if model_name == "phi3":
         return Phi3Wrapper("microsoft/Phi-3.5-mini-instruct")
     elif model_name == "llama3.2":
         return OllamaWrapper("llama3.2")
-    elif model_name == "gpt-4o-mini":
-        return OpenAIWrapper("gpt-4o-mini")
+    elif model_name == "QuantTrio/Qwen3-Coder-30B-A3B-Instruct-AWQ":
+        return OpenAIWrapper(model_name)
     elif model_name == "azure-gpt-4o-mini":
         return AzureOpenAIWrapper("gpt-4o-mini")
     else:
